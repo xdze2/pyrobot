@@ -21,14 +21,9 @@ class UltraSoundSensor:
         # to init, not sure if really needed
         self.gpio.write(self.trig_pin, 0)
         time.sleep(0.0001)
-        # self.gpio.set_pull_up_down(self.trig_pin, pigpio.PUD_DOWN)
-        # self.gpio.set_pull_up_down(self.echo_pin, pigpio.PUD_DOWN)
 
         self.cm_per_us = +0.0177909
         self.offset_cm = -1.6430462
-
-    def _trig(self, *args):
-        print(args)
 
     def measure_us(self) -> int:
         """Get total echo time in micro-seconds."""
@@ -38,11 +33,9 @@ class UltraSoundSensor:
         e1 = self.gpio.callback(self.echo_pin, pigpio.RISING_EDGE, self._callback_rising)
         e2 = self.gpio.callback(self.echo_pin, pigpio.FALLING_EDGE, self._callback_falling)
         
-        _cb = self.gpio.callback(self.trig_pin, pigpio.EITHER_EDGE, self._trig)
-
         self.gpio.gpio_trigger(self.trig_pin, 15, 1)  # minimum 10 µs
 
-        for _ in range(500):
+        for _ in range(50):
             if self.tic is not None and self.toc is not None:
                 e1.cancel()
                 e2.cancel()
@@ -60,11 +53,9 @@ class UltraSoundSensor:
         return round( echo_time * self.cm_per_us + self.offset_cm )
 
     def _callback_rising(self, _gpio_id: int, _value: bool, tick: int):
-        print('rise')
         self.tic = tick
 
     def _callback_falling(self, _gpio_id: int, _value: bool, tick: int):
-        print('fall')
         self.toc = tick
 
     # @staticmethod
