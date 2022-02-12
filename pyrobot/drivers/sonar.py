@@ -20,7 +20,9 @@ class UltraSoundSensor:
 
         # to init, not sure if really needed
         self.gpio.write(self.trig_pin, 0)
-        time.sleep(0.0001)
+        time.sleep(0.01)
+        self.gpio.gpio_trigger(self.trig_pin, 15, 1)
+        time.sleep(0.01)
 
         self.cm_per_us = +0.0177909
         self.offset_cm = -1.6430462
