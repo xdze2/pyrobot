@@ -1,2 +1,2 @@
-# trilobot
+# PyRobot
 Raspberry on wheels
