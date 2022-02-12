@@ -1,43 +1,35 @@
 
 import time
 import pigpio
-
-gpio = pigpio.pi()
-
-
 import numpy as np
 
+
 class UltraSoundSensor:
-    """
+    """Measure distance. Use the pigpio library.
+    
     see https://abyz.me.uk/rpi/pigpio/examples.html
     python Sonar Ranger example
-
     """
-    def __init__(self, gpio_trig: int, gpio_echo: int):
+    def __init__(self, gpio_trig: int, gpio_echo: int, gpio: pigpio.pi):
         self.echo_pin = gpio_echo
         self.trig_pin = gpio_trig
+        self.gpio = gpio
 
-        gpio.set_mode(self.trig_pin, pigpio.OUTPUT)
-        gpio.set_mode(self.echo_pin, pigpio.INPUT)
+        self.gpio.set_mode(self.trig_pin, pigpio.OUTPUT)
+        self.gpio.set_mode(self.echo_pin, pigpio.INPUT)
 
         self.cm_per_us = +0.0177909
         self.offset_cm = -1.6430462
 
-    def _callback_rising(self, _gpio_id: int, _value: bool, tick: int):
-        self.tic = tick
-
-    def _callback_falling(self, _gpio_id: int, _value: bool, tick: int):
-        self.toc = tick
-
     def measure_us(self) -> int:
-        """Get total echo time in micro-second."""
+        """Get total echo time in micro-seconds."""
         self.tic = None
         self.toc = None
 
-        e1 = gpio.callback(self.echo_pin, pigpio.RISING_EDGE, self._callback_rising)
-        e2 = gpio.callback(self.echo_pin, pigpio.FALLING_EDGE, self._callback_falling)
+        e1 = self.gpio.callback(self.echo_pin, pigpio.RISING_EDGE, self._callback_rising)
+        e2 = self.gpio.callback(self.echo_pin, pigpio.FALLING_EDGE, self._callback_falling)
         
-        gpio.gpio_trigger(self.trig_pin, 12, 1)  # 10 us
+        self.gpio.gpio_trigger(self.trig_pin, 15, 1)  # minimum 10 µs
 
         for _ in range(10):
             if self.tic is not None and self.toc is not None:
@@ -52,24 +44,24 @@ class UltraSoundSensor:
             raise TimeoutError
 
     def measure_cm(self, nbr_measure: int=3) -> float:
+        """Measure distance in centimeters."""
         echo_time = np.mean([self.measure_us() for _ in range(nbr_measure)])
         return round( echo_time * self.cm_per_us + self.offset_cm )
 
-    @staticmethod
-    def calib():
-        cm_per_us, offset_cm = np.polyfit(
-            calib_cm_us[:, 1],
-            calib_cm_us[:, 0], 
-            deg=1
-        )
+    def _callback_rising(self, _gpio_id: int, _value: bool, tick: int):
+        self.tic = tick
 
+    def _callback_falling(self, _gpio_id: int, _value: bool, tick: int):
+        self.toc = tick
 
+    # @staticmethod
+    # def calib():
+    #     cm_per_us, offset_cm = np.polyfit(
+    #         calib_cm_us[:, 1],
+    #         calib_cm_us[:, 0], 
+    #         deg=1
+    #     )
 
-# HC-SR04 Ultrasound pins
-ULTRA_TRIG_PIN = 13
-ULTRA_ECHO_PIN = 25
-
-sensor = UltraSoundSensor(gpio_echo=ULTRA_ECHO_PIN, gpio_trig=ULTRA_TRIG_PIN)
 
 # calib_cm_us = np.array([
 #     [10, 658],
@@ -81,4 +73,3 @@ sensor = UltraSoundSensor(gpio_echo=ULTRA_ECHO_PIN, gpio_trig=ULTRA_TRIG_PIN)
 
 
 
-print(sensor.measure_cm())
