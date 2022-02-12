@@ -9,5 +9,5 @@ gpio = pigpio.pi()
 sensor = UltraSoundSensor(gpio_echo=SonarGpio.ECHO, gpio_trig=SonarGpio.TRIG, gpio=gpio)
 
 
-print(f"distance = {sensor.measure_cm()} cm")
+print(f"sonar distance = {sensor.measure_cm()} cm")
 

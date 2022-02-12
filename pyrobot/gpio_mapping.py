@@ -15,3 +15,12 @@ class OnboardLEDGpio(IntEnum):
     LED_B = 22
     LED_X = 17
     LED_Y = 27
+
+
+class WheelMotors(IntEnum):
+    """Motor driver pins, via DRV8833PWP Dual H-Bridge."""
+    EN = 26
+    LEFT_P = 8
+    LEFT_N = 11
+    RIGHT_P = 10
+    RIGHT_N = 9
