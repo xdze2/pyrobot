@@ -43,10 +43,11 @@ class WheelMotor:
 
     def set_speed(self, speed: int):
         """0 = MAX SPEED"""
-        if speed >= 0:
-            pin_pwm, pin_fix = self.pin1, self.pin2
-        else:
-            pin_pwm, pin_fix = self.pin2, self.pin1
+        pin_pwm, pin_fix = (
+            (self.pin1, self.pin2)
+            if speed >= 0
+            else (self.pin2, self.pin1)
+        )
 
         gpio.set_PWM_dutycycle(pin_pwm, abs(speed))
         gpio.set_PWM_dutycycle(pin_fix, 100*self.pwm_decay_mode)
