@@ -8,7 +8,11 @@ gpio = pigpio.pi()
 import numpy as np
 
 class UltraSoundSensor:
+    """
+    see https://abyz.me.uk/rpi/pigpio/examples.html
+    python Sonar Ranger example
 
+    """
     def __init__(self, gpio_trig: int, gpio_echo: int):
         self.echo_pin = gpio_echo
         self.trig_pin = gpio_trig
