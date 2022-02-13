@@ -18,11 +18,8 @@ class UltraSoundSensor:
         self.gpio.set_mode(self.trig_pin, pigpio.OUTPUT)
         self.gpio.set_mode(self.echo_pin, pigpio.INPUT)
 
-        # to init, not sure if really needed
         self.gpio.write(self.trig_pin, 0)
-        time.sleep(0.01)
-        self.gpio.gpio_trigger(self.trig_pin, 15, 1)
-        time.sleep(0.01)
+        self.gpio.set_pull_up_down(self.echo_pin, pigpio.PUD_OFF)
 
         self.cm_per_us = +0.0177909
         self.offset_cm = -1.6430462
@@ -35,15 +32,15 @@ class UltraSoundSensor:
         e1 = self.gpio.callback(self.echo_pin, pigpio.RISING_EDGE, self._callback_rising)
         e2 = self.gpio.callback(self.echo_pin, pigpio.FALLING_EDGE, self._callback_falling)
         
-        self.gpio.gpio_trigger(self.trig_pin, 15, 1)  # minimum 10 µs
+        self.gpio.gpio_trigger(self.trig_pin, 10, 1)  # minimum 10 µs
 
-        for _ in range(50):
+        for _ in range(100):
             if self.tic is not None and self.toc is not None:
                 e1.cancel()
                 e2.cancel()
                 return self.toc - self.tic
             else:
-                time.sleep(.0001)
+                time.sleep(.001)
         else:
             e1.cancel()
             e2.cancel()
@@ -51,7 +48,11 @@ class UltraSoundSensor:
 
     def measure_cm(self, nbr_measure: int=3) -> float:
         """Measure distance in centimeters."""
-        echo_time = np.mean([self.measure_us() for _ in range(nbr_measure)])
+        measures = []
+        for _ in range(nbr_measure):
+            measures.append(self.measure_us())
+            time.sleep(.060)
+        echo_time = np.mean(measures)
         return round( echo_time * self.cm_per_us + self.offset_cm )
 
     def _callback_rising(self, _gpio_id: int, _value: bool, tick: int):
@@ -60,15 +61,15 @@ class UltraSoundSensor:
     def _callback_falling(self, _gpio_id: int, _value: bool, tick: int):
         self.toc = tick
 
-    # @staticmethod
-    # def calib():
-    #     cm_per_us, offset_cm = np.polyfit(
-    #         calib_cm_us[:, 1],
-    #         calib_cm_us[:, 0], 
-    #         deg=1
-    #     )
 
 
+# @staticmethod
+# def calib():
+#     cm_per_us, offset_cm = np.polyfit(
+#         calib_cm_us[:, 1],
+#         calib_cm_us[:, 0], 
+#         deg=1
+#     )
 # calib_cm_us = np.array([
 #     [10, 658],
 #     [20, 1210],
