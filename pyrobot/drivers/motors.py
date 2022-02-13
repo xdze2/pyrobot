@@ -1,113 +1,67 @@
-import time
-import RPi.GPIO as GPIO
 
 
-# Motor names
-MOTOR_LEFT = 0
-MOTOR_RIGHT = 1
-NUM_MOTORS = 2
-
-# Motor driver pins, via DRV8833PWP Dual H-Bridge
-MOTOR_EN_PIN = 26
-MOTOR_LEFT_P = 8
-MOTOR_LEFT_N = 11
-MOTOR_RIGHT_P = 10
-MOTOR_RIGHT_N = 9
+import pigpio
+from enum import IntEnum
 
 
-GPIO.setwarnings(False)
-GPIO.setmode(GPIO.BCM)
+class DecayMode(IntEnum):
+    FAST = 0
+    SLOW = 1
 
 
-# Setup motor driver
-GPIO.setup(MOTOR_EN_PIN, GPIO.OUT)
-GPIO.setup(MOTOR_LEFT_P, GPIO.OUT)
-GPIO.setup(MOTOR_LEFT_N, GPIO.OUT)
-GPIO.setup(MOTOR_RIGHT_P, GPIO.OUT)
-GPIO.setup(MOTOR_RIGHT_N, GPIO.OUT)
+class WheelMotor:
 
-# https://www.ti.com/lit/ds/symlink/drv8833.pdf?HQS=dis-mous-null-mousermode-dsf-pf-null-wwe&ts=1644518569384&ref_url=https%253A%252F%252Fwww.mouser.com%252F
-GPIO.output(MOTOR_EN_PIN, True)
+    PWM_FREQ = 8_000
+    # max 8000Hz at default sample_rate (4us)
+    # https://abyz.me.uk/rpi/pigpio/python.html#set_PWM_frequency
 
-GPIO.output(MOTOR_LEFT_P, True)
-GPIO.output(MOTOR_LEFT_N, False)
-time.sleep(1)
+    # https://e2e.ti.com/support/motor-drivers-group/motor-drivers/f/motor-drivers-forum/251780/drv8833-pwm-control
 
-GPIO.output(MOTOR_LEFT_P, True)
-GPIO.output(MOTOR_LEFT_N, True)
+    def __init__(self, pin_in1: int, pin_in2: int, enable_pin: int, gpio: pigpio.pi):
+        self.pin1 = pin_in1
+        self.pin2 = pin_in2
+        self.pin_en = enable_pin
+        self.gpio = gpio
 
-time.sleep(1)
-GPIO.output(MOTOR_EN_PIN, False)
+        self.pwm_decay_mode = DecayMode.SLOW
 
-exit()
-motor_left_p_pwm = GPIO.PWM(MOTOR_LEFT_P, 100)
-motor_left_p_pwm.start(0)
+        self.gpio.set_mode(self.pin_en, pigpio.OUTPUT)
 
-motor_left_n_pwm = GPIO.PWM(MOTOR_LEFT_N, 100)
-motor_left_n_pwm.start(0)
+        for pin in (self.pin1, self.pin2):
+            self.gpio.set_mode(pin, pigpio.OUTPUT)
+            freq = gpio.set_PWM_frequency(pin, self.PWM_FREQ)
+            print(freq)
+            self.gpio.set_PWM_range(pin, 100)  # use % to set speed
 
-motor_right_p_pwm = GPIO.PWM(MOTOR_RIGHT_P, 100)
-motor_right_p_pwm.start(0)
+    def set_speed(self, speed: int):
+        """MAX SPEED = 100"""
 
-motor_right_n_pwm = GPIO.PWM(MOTOR_RIGHT_N, 100)
-motor_right_n_pwm.start(0)
-motor_pwm_mapping = {
-    MOTOR_LEFT_P: motor_left_p_pwm,
-    MOTOR_LEFT_N: motor_left_n_pwm,
-    MOTOR_RIGHT_P: motor_right_p_pwm,
-    MOTOR_RIGHT_N: motor_right_n_pwm,
-}
+        if not self.is_enable():
+            self.enable()
 
-
-def set_motor_speed(motor, speed):
-    """Sets the speed of the given motor.
-    motor: the ID of the motor to set the state of
-    speed: the motor speed, between -1.0 and 1.0
-    """
-    if type(motor) is not int:
-        raise TypeError("motor must be an integer")
-
-    if motor not in range(2):
-        raise ValueError(
-            """motor must be an integer in the range 0 to 1. For convenience, use the constants:
-            MOTOR_LEFT (0), or MOTOR_RIGHT (1)"""
+        pin_pwm, pin_fix = (
+            (self.pin1, self.pin2) if speed >= 0 else (self.pin2, self.pin1)
         )
 
-    # Limit the speed value rather than throw a value exception
-    speed = max(min(speed, 1.0), -1.0)
+        duty_cycle = max(0, 100 - abs(speed))
+        self.gpio.set_PWM_dutycycle(pin_pwm, duty_cycle)
+        self.gpio.set_PWM_dutycycle(pin_fix, 100 * self.pwm_decay_mode)
 
-    GPIO.output(MOTOR_EN_PIN, True)
-    pwm_p = None
-    pwm_n = None
-    if motor == 0:
-        # Left motor inverted so a positive speed drives forward
-        pwm_p = motor_pwm_mapping[MOTOR_LEFT_N]
-        pwm_n = motor_pwm_mapping[MOTOR_LEFT_P]
-    else:
-        pwm_p = motor_pwm_mapping[MOTOR_RIGHT_P]
-        pwm_n = motor_pwm_mapping[MOTOR_RIGHT_N]
+    def enable(self):
+        self.gpio.write(self.pin_en, 1)
 
-    if speed > 0.0:
-        pwm_p.ChangeDutyCycle(100)
-        pwm_n.ChangeDutyCycle(100 - (speed * 100))
-    elif speed < 0.0:
-        pwm_p.ChangeDutyCycle(100 - (-speed * 100))
-        pwm_n.ChangeDutyCycle(100)
-    else:
-        pwm_p.ChangeDutyCycle(100)
-        pwm_n.ChangeDutyCycle(100)
+    def disable(self):
+        self.gpio.write(self.pin_en, 0)
 
+    def is_enable(self) -> bool:
+        return self.gpio.read(self.pin_en)
 
-def set_motor_speeds(l_speed: float, r_speed: float):
-    """Sets the speeds of both motors at once.
-    l_speed: the left motor speed, between -1.0 and 1.0
-    r_speed: the right motor speed, between -1.0 and 1.0
-    """
-    set_motor_speed(MOTOR_LEFT, l_speed)
-    set_motor_speed(MOTOR_RIGHT, r_speed)
+    def brake(self):
+        """Slow decay."""
+        self.gpio.set_PWM_dutycycle(self.pin1, 100)
+        self.gpio.set_PWM_dutycycle(self.pin2, 100)
 
-
-# set_motor_speeds(0.1, -0.1)
-# time.sleep(.4)
-set_motor_speeds(0, 0)
-
+    def coast(self):
+        """Fast decay."""
+        self.gpio.set_PWM_dutycycle(self.pin1, 0)
+        self.gpio.set_PWM_dutycycle(self.pin2, 0)
