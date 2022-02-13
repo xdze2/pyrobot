@@ -12,7 +12,7 @@ class DecayMode(IntEnum):
 class WheelMotor:
 
     PWM_FREQ = 8_000
-    # max 8000Hz at default sample_rate (4us)
+    # max 8000Hz at default sample_rate (5 us)
     # https://abyz.me.uk/rpi/pigpio/python.html#set_PWM_frequency
 
     # https://e2e.ti.com/support/motor-drivers-group/motor-drivers/f/motor-drivers-forum/251780/drv8833-pwm-control
