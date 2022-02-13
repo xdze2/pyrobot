@@ -11,22 +11,31 @@ from pyrobot.drivers.motors import WheelMotor
 
 gpio = pigpio.pi()
 
-wheel_left = WheelMotor(
+left_wheel = WheelMotor(
      WheelMotorsGpio.LEFT_1,
      WheelMotorsGpio.LEFT_2,
      WheelMotorsGpio.EN,
      gpio
 )
 
-wheel_left.set_speed(100)
+right_wheel = WheelMotor(
+     WheelMotorsGpio.RIGHT_1,
+     WheelMotorsGpio.RIGHT_2,
+     WheelMotorsGpio.EN,
+     gpio
+)
+
+
+def drive(speed: int, curve: int):
+     pass
+    
+
+left_wheel.set_speed(30)
+right_wheel.set_speed(-30)
 # wheel_left.enable()
 
-time.sleep(2)
-wheel_left.coast()
-time.sleep(2)
-wheel_left.set_speed(-100)
+time.sleep(1)
+left_wheel.coast()
 
-time.sleep(2)
-
-
-wheel_left.disable()
+left_wheel.disable()
+right_wheel.disable()
