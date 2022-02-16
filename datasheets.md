@@ -6,8 +6,12 @@
 
 
 ## Datasheets
-- datasheet: [sn3218 - 18 Channel LED driver](https://github.com/pimoroni/sn3218/blob/master/datasheets/sn3218-datasheet.pdf)
 - [Ultrasonic Ranging Module HC - SR04](https://cdn.sparkfun.com/datasheets/Sensors/Proximity/HCSR04.pdf)
+
+
+## RGB Leds
+- datasheet: [sn3218 - 18 Channel LED driver](https://github.com/pimoroni/sn3218/blob/master/datasheets/sn3218-datasheet.pdf)
+- library: [pimoroni/sn3218-python](https://github.com/pimoroni/sn3218-python)
 
 ## IMU
 - datasheet: [6-axis/mpu-6050](https://invensense.tdk.com/products/motion-tracking/6-axis/mpu-6050/)
