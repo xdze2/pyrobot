@@ -71,13 +71,15 @@ class SN3218:
         )
         self._update()
 
-    def set_raw_pwm(self, values: List[int]):
-        self._write(self.SET_PWM_REGISTER, values)
+    def set_pwm(self, values: List[int]):
+        raw_values = [self._gamma(step) for step in values]
+        print(raw_values)
+        self._write(self.SET_PWM_REGISTER, raw_values)
         self._update()
 
     @staticmethod
     def _gamma(step: int):
-        return int( 255*(step/255)**1.75 )
+        return int( 255*(step/255)**2)#1.75 )
 
 
 sn = SN3218()
@@ -103,17 +105,24 @@ values = [
     0,
 ]
 
-sn.set_raw_pwm(values)
+# sn.set_raw_pwm(values)
 
-for k in range(10):
-    sn.start()
-    time.sleep(0.5)
-    sn.shutdown()
-    time.sleep(0.2)
+for uu in range(10):
+    for k in range(256):
+        values = [k]*18
+        sn.set_pwm(values)
+        time.sleep(.00005)
 
+    for k in range(0, 240, 2):
+        values = [255 - k]*18
+        sn.set_pwm(values)
+        time.sleep(.001)
 
-default_gamma_table = [int(pow(255, float(i - 1) / 255)) for i in range(256)]
-print(default_gamma_table)
+    break
+
+# sn.shutdown()
+# default_gamma_table = [int(pow(255, float(i - 1) / 255)) for i in range(256)]
+# print(default_gamma_table)
 # channel_gamma_table = [default_gamma_table for _ in range(18)]
 
 # i2c.write_i2c_block_data(I2C_ADDRESS, CMD_SET_PWM_VALUES, [channel_gamma_table[i][values[i]] for i in range(18)])
