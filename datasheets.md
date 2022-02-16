@@ -14,8 +14,11 @@
 - library: [pimoroni/sn3218-python](https://github.com/pimoroni/sn3218-python)
 
 ## IMU
-- datasheet: [6-axis/mpu-6050](https://invensense.tdk.com/products/motion-tracking/6-axis/mpu-6050/)
+- web: [6-axis/mpu-6050](https://invensense.tdk.com/products/motion-tracking/6-axis/mpu-6050/)
+- [MPU-6000-Datasheet1.pdf](https://invensense.tdk.com/wp-content/uploads/2015/02/MPU-6000-Datasheet1.pdf)
 - doc: [MPU6050 6-DoF Accelerometer and Gyro By Bryan Siepert](https://learn.adafruit.com/mpu6050-6-dof-accelerometer-and-gyro)
+- lib: https://github.com/m-rtijn/mpu6050/blob/master/mpu6050/mpu6050.py
+
 
 ## Motors
 - datasheet: [DRV8833 Dual H-Bridge Motor Driver](https://www.ti.com/lit/ds/symlink/drv8833.pdf?HQS=dis-mous-null-mousermode-dsf-pf-null-wwe&ts=1644518569384&ref_url=https%253A%252F%252Fwww.mouser.com%252F)
