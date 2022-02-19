@@ -32,7 +32,9 @@
 - [MPU-6000-Datasheet1.pdf](https://invensense.tdk.com/wp-content/uploads/2015/02/MPU-6000-Datasheet1.pdf)
 - [Register Map and Descriptions](https://invensense.tdk.com/wp-content/uploads/2015/02/MPU-6000-Register-Map1.pdf)
 - doc: [MPU6050 6-DoF Accelerometer and Gyro By Bryan Siepert](https://learn.adafruit.com/mpu6050-6-dof-accelerometer-and-gyro)
-- python lib: https://github.com/m-rtijn/mpu6050/blob/master/mpu6050/mpu6050.py
+- not official python lib: https://github.com/m-rtijn/mpu6050/blob/master/mpu6050/mpu6050.py
+- another python lib, with FIFO and DMP: https://github.com/streamnsight/mpu6050/blob/master/mpu6050/mpu6050.py
+- Adafruit lib: https://github.com/adafruit/Adafruit_CircuitPython_MPU6050
 - https://stackoverflow.com/questions/60419390/mpu-6050-correctly-reading-data-from-the-fifo-register
 - Linux Kernel Driver (iio): 
   * https://elixir.bootlin.com/linux/latest/source/drivers/iio/imu/inv_mpu6050
@@ -40,11 +42,16 @@
   * https://github.com/raspberrypi/linux/blob/rpi-4.14.y/arch/arm/boot/dts/overlays/README
 
 On the raspberry:
+
 ```
 $ sudo dtoverlay mpu6050
 $ sudo dtoverlay -l
 ```
 
+- How to set, read buffer and use trigger ?
+
+- DMP not accesible, nor documented, but with the Adafruit lib (Jeff rowberg I2cdev) ? https://www.i2cdevlib.com/devices/mpu6050#source
+- https://forums.raspberrypi.com/viewtopic.php?p=1829286&hilit=i2cdevlib#p1829286
 
 ### libiio python binding
 - http://analogdevicesinc.github.io/libiio/master/python/device.html

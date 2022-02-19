@@ -1,38 +1,21 @@
 from mpu6050 import mpu6050
+import time
+
+imu = mpu6050(0x68)
 
 
-sensor = mpu6050(0x68)
+imu.set_accel_range(mpu6050.ACCEL_RANGE_2G)
 
-accelerometer_data = sensor.get_accel_data()
-
-print(accelerometer_data)
-
-print(sensor.get_gyro_data())
-
-print(sensor.get_all_data())
-
-print(sensor.get_temp())
-
-# from smbus import SMBus
-
-# I2C_ADDRESS = 0x68
-
-# TEMP_OUt_ADDR = 0x41
-
-# PWR_MGMT_1 = 0x6B
-# i2c = SMBus(1)
-
-# i2c.write_byte_data(I2C_ADDRESS, PWR_MGMT_1, 0x00)
-
-# data = i2c.read_i2c_block_data(
-#     I2C_ADDRESS, TEMP_OUt_ADDR, 6
-# )
-
-# print(data)
+# print(imu.get_accel_data())
+# print(imu.get_gyro_data())
+# print(imu.get_all_data())
+# print(imu.get_temp())
 
 
-    # note: Doesn't work...
-    # def _read(self, register_addr, register_length) -> int:
-    #     return self.i2c.read_i2c_block_data(
-    #         self.I2C_ADDRESS, register_addr, register_length
-    #     )
+def format_vector(vector):
+    return ' '.join((f'{v: 8.3f}{k}' for k, v  in vector.items()))
+
+while True:
+    acc, gyro, T = imu.get_all_data()
+    print(f"{time.time(): 10f}", format_vector(acc), format_vector(gyro))
+    time.sleep(0.5)

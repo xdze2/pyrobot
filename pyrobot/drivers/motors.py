@@ -30,7 +30,6 @@ class WheelMotor:
         for pin in (self.pin1, self.pin2):
             self.gpio.set_mode(pin, pigpio.OUTPUT)
             freq = gpio.set_PWM_frequency(pin, self.PWM_FREQ)
-            print(freq)
             self.gpio.set_PWM_range(pin, 100)  # use % to set speed
 
     def set_speed(self, speed: int):
