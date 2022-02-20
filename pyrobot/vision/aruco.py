@@ -3,13 +3,10 @@ import numpy as np
 from pprint import pprint
 
 
-
 class ArucoDetector:
-
     def __init__(self):
         self.aruco_dict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_5X5_250)
         self.aruco_params = cv2.aruco.DetectorParameters_create()
-
 
         self.aruco_params.adaptiveThreshWinSizeMin = 40
         self.aruco_params.adaptiveThreshWinSizeMax = 200
@@ -36,8 +33,11 @@ class ArucoDetector:
 
     def detect(self, image):
         corners, ids, rejected = cv2.aruco.detectMarkers(
-            image, self.aruco_dict, parameters=self.aruco_params,
-            cameraMatrix=self.cam_matrice, distCoeff=self.cam_distortion
+            image,
+            self.aruco_dict,
+            parameters=self.aruco_params,
+            cameraMatrix=self.cam_matrice,
+            distCoeff=self.cam_distortion,
         )
         print("found", len(corners))
         return corners, ids, rejected
@@ -49,14 +49,9 @@ class ArucoDetector:
     def estimate_pose(self, image):
         corners, ids, rejected = self.detect(image)
 
-
         rot, trans, *args = cv2.aruco.estimatePoseSingleMarkers(
-            corners,
-            self.marker_size_cm,
-            self.cam_matrice,
-            self.cam_distortion
+            corners, self.marker_size_cm, self.cam_matrice, self.cam_distortion
         )
         pprint(rot)
         pprint(trans)
         pprint(args)
-    

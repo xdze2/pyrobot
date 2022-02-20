@@ -1,13 +1,9 @@
-
-
-
 import time
 import board
 import adafruit_mpu6050
 
 
 class Imu:
-
     def __init__(self, buffer):
         i2c = board.I2C()  # uses board.SCL and board.SDA
         self.mpu = adafruit_mpu6050.MPU6050(i2c)
@@ -21,10 +17,9 @@ class Imu:
 
         while self.run:
             self.data.append(self.get_gyro())
-            time.sleep(.001)
+            time.sleep(0.001)
 
-        print('Stop recording', len(self.data))
-
+        print("Stop recording", len(self.data))
 
 
 # while True:

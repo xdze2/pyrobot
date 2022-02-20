@@ -1,4 +1,3 @@
-
 import time
 import pigpio
 import numpy as np
@@ -6,10 +5,11 @@ import numpy as np
 
 class UltraSoundSensor:
     """Measure distance. Use the pigpio library.
-    
+
     see https://abyz.me.uk/rpi/pigpio/examples.html
     python Sonar Ranger example
     """
+
     def __init__(self, gpio_trig: int, gpio_echo: int, gpio: pigpio.pi):
         self.echo_pin = gpio_echo
         self.trig_pin = gpio_trig
@@ -29,9 +29,13 @@ class UltraSoundSensor:
         self.tic = None
         self.toc = None
 
-        e1 = self.gpio.callback(self.echo_pin, pigpio.RISING_EDGE, self._callback_rising)
-        e2 = self.gpio.callback(self.echo_pin, pigpio.FALLING_EDGE, self._callback_falling)
-        
+        e1 = self.gpio.callback(
+            self.echo_pin, pigpio.RISING_EDGE, self._callback_rising
+        )
+        e2 = self.gpio.callback(
+            self.echo_pin, pigpio.FALLING_EDGE, self._callback_falling
+        )
+
         self.gpio.gpio_trigger(self.trig_pin, 10, 1)  # minimum 10 µs
 
         for _ in range(100):
@@ -40,20 +44,20 @@ class UltraSoundSensor:
                 e2.cancel()
                 return self.toc - self.tic
             else:
-                time.sleep(.001)
+                time.sleep(0.001)
         else:
             e1.cancel()
             e2.cancel()
             raise TimeoutError
 
-    def measure_cm(self, nbr_measure: int=3) -> float:
+    def measure_cm(self, nbr_measure: int = 3) -> float:
         """Measure distance in centimeters."""
         measures = []
         for _ in range(nbr_measure):
             measures.append(self.measure_us())
-            time.sleep(.040)
+            time.sleep(0.040)
         echo_time = np.mean(measures)
-        return round( echo_time * self.cm_per_us + self.offset_cm )
+        return round(echo_time * self.cm_per_us + self.offset_cm)
 
     def _callback_rising(self, _gpio_id: int, _value: bool, tick: int):
         self.tic = tick
@@ -62,12 +66,11 @@ class UltraSoundSensor:
         self.toc = tick
 
 
-
 # @staticmethod
 # def calib():
 #     cm_per_us, offset_cm = np.polyfit(
 #         calib_cm_us[:, 1],
-#         calib_cm_us[:, 0], 
+#         calib_cm_us[:, 0],
 #         deg=1
 #     )
 # calib_cm_us = np.array([
@@ -77,6 +80,3 @@ class UltraSoundSensor:
 #     [40, 2358],
 #     [50, 2894]
 # ])
-
-
-

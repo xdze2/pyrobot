@@ -1,5 +1,3 @@
-
-
 import pigpio
 from enum import IntEnum
 

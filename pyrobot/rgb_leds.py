@@ -5,13 +5,12 @@ from .hardware.leds_sn3218 import SN3218
 import colorsys
 
 
-
 class RgbColor(NamedTuple):
     r: int
     g: int
     b: int
 
-    def to_rgb(self) -> 'RgbColor':
+    def to_rgb(self) -> "RgbColor":
         return self
 
 
@@ -21,10 +20,9 @@ class HsvColor(NamedTuple):
     v: int
 
     def to_rgb(self) -> RgbColor:
-        return RgbColor(*(
-            int(u*255)
-            for u in colorsys.hsv_to_rgb(*(v/255 for v in self))
-        ))
+        return RgbColor(
+            *(int(u * 255) for u in colorsys.hsv_to_rgb(*(v / 255 for v in self)))
+        )
 
 
 class RgbUnderlighting:
@@ -45,32 +43,27 @@ class RgbUnderlighting:
         self.sn3218 = SN3218()
 
         # State
-        self.led_colors = [
-            HsvColor(0, 0, 0)
-            for _name in self.LED_MAPPING
-        ]
+        self.led_colors = [HsvColor(0, 0, 0) for _name in self.LED_MAPPING]
 
     def _ones(self, hsv_color: HsvColor):
-        return [
-            hsv_color for _led_name in self.LED_MAPPING
-        ]
+        return [hsv_color for _led_name in self.LED_MAPPING]
 
-    def change_color(self, color: HsvColor, led_id_pattern: str = ''):
+    def change_color(self, color: HsvColor, led_id_pattern: str = ""):
         """Select led."""
         colors = [
             (color if led_id_pattern in name else ancient_color)
             for name, ancient_color in zip(self.LED_MAPPING, self.led_colors)
         ]
         self._set_colors(colors)
-        
+
     def turn_off(self):
-        self.change_color(HsvColor(0, 0, 0), '')
+        self.change_color(HsvColor(0, 0, 0), "")
         self.sn3218.shutdown()
 
     def _set_colors(self, color_values: List[RgbColor]):
         """Keep color state."""
         self.led_colors = color_values
-        
+
         values = [
             individuel_color
             for color in self.led_colors
@@ -83,7 +76,7 @@ class RgbUnderlighting:
             f"{name:>12}: {color}"
             for name, color in zip(self.LED_MAPPING, self.led_colors)
         )
-        print('\n'.join(lines))
+        print("\n".join(lines))
 
     async def flash(self, hue: int = 0, saturation: int = 0):
 
@@ -103,5 +96,3 @@ class RgbUnderlighting:
 
         await asyncio.sleep(0.001)
         self.sn3218.shutdown()
-
-
