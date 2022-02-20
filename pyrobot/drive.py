@@ -1,12 +1,12 @@
 
 
-
-from pyrobot.gpio_mapping import WheelMotorsGpio
-
+import asyncio
 import time
+
 import pigpio
 
 from pyrobot.drivers.motors import WheelMotor
+from pyrobot.gpio_mapping import WheelMotorsGpio
 
 
 class Mobility:
@@ -29,12 +29,13 @@ class Mobility:
                gpio
           )
 
-     def drive(self, speed: int, curve: int = 0, duration_sec: float = 0.5):
+     def drive(self, speed: int, curve: int = 0):
      
           self.left_wheel.set_speed(speed + curve)
           self.right_wheel.set_speed(speed - curve)
 
-          time.sleep(duration_sec)
+     def stop(self):
+          # await asyncio.sleep(duration_sec)
           self.left_wheel.coast()
           self.right_wheel.coast()
 
