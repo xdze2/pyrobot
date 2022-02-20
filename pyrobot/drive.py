@@ -5,7 +5,7 @@ import time
 
 import pigpio
 
-from pyrobot.drivers.motors import WheelMotor
+from pyrobot.hardware.motors import WheelMotor
 from pyrobot.gpio_mapping import WheelMotorsGpio
 
 

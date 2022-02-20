@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pigpio
 from pyrobot.drive import Mobility
-from pyrobot.drivers.sonar import UltraSoundSensor
+from pyrobot.hardware.sonar import UltraSoundSensor
 from pyrobot.gpio_mapping import SonarGpio
 
 gpio = pigpio.pi()

@@ -1,6 +1,6 @@
 
 
-from pyrobot.drivers.sonar import UltraSoundSensor
+from pyrobot.hardware.sonar import UltraSoundSensor
 from pyrobot.gpio_mapping import SonarGpio
 import pigpio
 
