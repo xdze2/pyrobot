@@ -27,11 +27,20 @@ class SN3218:
         self.start()
         self.enable_all_leds()
 
-    # def hardware_shutdown(self):
-    #     gpio.write(self.UNDERLIGHTING_EN_PIN, 1)
+    def set_raw_pwm(self, values: List[int]):
+        self._write(self.SET_PWM_REGISTER, values)
+        self._update()
+
+    def set_intensity(self, values: List[int]):
+        """Apply gamma correction."""
+        raw_values = [self._gamma(step) for step in values]
+        self.set_raw_pwm(raw_values)
 
     def _write(self, register_addr, data: List[int]):
         self.i2c.write_i2c_block_data(self.I2C_ADDRESS, register_addr, data)
+
+    # def hardware_shutdown(self):
+    #     gpio.write(self.UNDERLIGHTING_EN_PIN, 1)
 
     # note: Doesn't work...
     # def _read(self, register_addr, register_length) -> int:
@@ -68,12 +77,6 @@ class SN3218:
         )
         self._update()
 
-    def set_pwm(self, values: List[int]):
-        raw_values = [self._gamma(step) for step in values]
-        print(raw_values)
-        self._write(self.SET_PWM_REGISTER, raw_values)
-        self._update()
-
     @staticmethod
     def _gamma(step: int):
-        return int(255 * (step / 255) ** 2)
+        return int(255 * (step / 255) ** 1.5)
