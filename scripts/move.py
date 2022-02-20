@@ -25,7 +25,7 @@ th = Thread(
 th.start()
 
 time.sleep(.2)
-mob.drive(0, -70, 0.5)
+mob.drive(0, -70, 1)
 time.sleep(.2)
 mob.drive(0, 70, 1)
 time.sleep(.2)
@@ -35,9 +35,8 @@ sense.run = False
 
 data = np.array(sense.data)
 
-
-plt.plot(data[:, 0], label='wx')
-plt.plot(data[:, 1], label='wy')
-plt.plot(data[:, 2], label='wz')
+plt.plot(np.cumsum(data[:, 0]), label='wx')
+plt.plot(np.cumsum(data[:, 1]), label='wy')
+plt.plot(np.cumsum(data[:, 2]), label='wz')
 plt.legend()
 plt.savefig('graph.png')

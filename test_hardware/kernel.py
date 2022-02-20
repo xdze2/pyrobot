@@ -31,7 +31,7 @@ print(device.name)
 for chan in device.channels:
     print(chan.id)
     chan.enabled = 1
-
+    break
 
 # https://github.com/analogdevicesinc/libiio/issues/109
 
