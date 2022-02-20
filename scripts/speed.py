@@ -38,7 +38,6 @@ async def measure_distance():
         data.append(distance)
 
         color = distance_color_scale(distance[1])
-        print(color, flush=True)
         leds.change_color(color, 'front')
         await asyncio.sleep(0.001)
 
