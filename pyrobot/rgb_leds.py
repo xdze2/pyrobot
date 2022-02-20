@@ -1,5 +1,5 @@
 import asyncio
-from typing import Tuple, NamedTuple
+from typing import Tuple, NamedTuple, List
 from .hardware.leds_sn3218 import SN3218
 
 import colorsys
@@ -45,28 +45,52 @@ class RgbUnderlighting:
         self.sn3218 = SN3218()
 
         # State
-        self.intensity_values = self._ones(HsvColor(255, 0, 100))
+        self.led_colors = [
+            HsvColor(0, 0, 0)
+            for _name in self.LED_MAPPING
+        ]
 
     def _ones(self, hsv_color: HsvColor):
-        intensities = [
-            color
-            for _led_name in self.LED_MAPPING
-            for color in hsv_color.to_rgb()
+        return [
+            hsv_color for _led_name in self.LED_MAPPING
         ]
-        return intensities
 
-    def set_color(self, color: HsvColor, led_id_pattern: str = ''):
+    def change_color(self, color: HsvColor, led_id_pattern: str = ''):
+        """Select led."""
+        colors = [
+            (color if led_id_pattern in name else ancient_color)
+            for name, ancient_color in zip(self.LED_MAPPING, self.led_colors)
+        ]
+        self._set_colors(colors)
+        
+    def turn_off(self):
+        self.change_color(HsvColor(0, 0, 0), '')
+        self.sn3218.shutdown()
 
-        values = self._ones(color)
+    def _set_colors(self, color_values: List[RgbColor]):
+        """Keep color state."""
+        self.led_colors = color_values
+        
+        values = [
+            individuel_color
+            for color in self.led_colors
+            for individuel_color in color.to_rgb()
+        ]
         self.sn3218.set_intensity(values)
 
+    def print_state(self):
+        lines = (
+            f"{name:>12}: {color}"
+            for name, color in zip(self.LED_MAPPING, self.led_colors)
+        )
+        print('\n'.join(lines))
 
     async def flash(self, hue: int = 0, saturation: int = 0):
 
         self.sn3218.start()
         for k in range(0, 255, 8):
             values = self._ones(HsvColor(hue, saturation, k))
-            self.sn3218.set_intensity(values)
+            self._set_colors(values)
             await asyncio.sleep(0.001)
 
         await asyncio.sleep(0.001)
@@ -74,11 +98,10 @@ class RgbUnderlighting:
         for k in range(0, 255, 2):
             kbar = 255 - k
             values = self._ones(HsvColor(hue, saturation, kbar))
-            self.sn3218.set_intensity(values)
+            self._set_colors(values)
             await asyncio.sleep(0.001)
 
         await asyncio.sleep(0.001)
         self.sn3218.shutdown()
 
 
-    

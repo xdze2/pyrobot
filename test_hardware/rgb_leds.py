@@ -15,7 +15,7 @@ def cli(ctx):
 @click.option('-h', 'h', default=255, show_default=True)
 @click.option('-s', 's', default=255, show_default=True)
 @click.option('-v', 'v', default=255, show_default=True)
-def set(ctx, h, s, v):
+def all(ctx, h, s, v):
     underligts = ctx.obj['lights']
     underligts.set_color(HsvColor(h, s, v))
 
@@ -31,6 +31,25 @@ def flash(ctx, hue, saturation):
         await underligts.flash(hue, saturation)
 
     asyncio.run(main())
+
+
+@cli.command()
+@click.pass_context
+@click.option('-h', 'h', default=255, show_default=True)
+@click.option('-s', 's', default=255, show_default=True)
+@click.option('-v', 'v', default=255, show_default=True)
+@click.argument('pattern')
+def set(ctx, h, s, v, pattern):
+    underligts = ctx.obj['lights']
+    print(pattern)
+    underligts.change_color(HsvColor(h, s, v), pattern)
+
+
+@cli.command()
+@click.pass_context
+def off(ctx):
+    underligts = ctx.obj['lights']
+    underligts.turn_off()
 
 
 
