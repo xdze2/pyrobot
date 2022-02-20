@@ -80,4 +80,4 @@ class SN3218:
         self._update()
 
     def _gamma(self, step: int):
-        return self.gamma_step[min(255, step)]
+        return self.gamma_step[min(255, max(0, step))]
