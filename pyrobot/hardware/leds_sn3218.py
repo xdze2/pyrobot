@@ -24,6 +24,8 @@ class SN3218:
 
         self.i2c = SMBus(1)
 
+        self.gamma_step = [int(255 * (step / 255) ** 1.5) for step in range(256)]
+
         self.start()
         self.enable_all_leds()
 
@@ -77,6 +79,5 @@ class SN3218:
         )
         self._update()
 
-    @staticmethod
-    def _gamma(step: int):
-        return int(255 * (step / 255) ** 1.5)
+    def _gamma(self, step: int):
+        return self.gamma_step[min(255, step)]

@@ -24,6 +24,7 @@ class RgbUnderlighting:
     
     async def flash(self, color= None):
 
+        self.sn3218.start()
         for k in range(0, 255, 8):
             values = [k]*18
             self.sn3218.set_intensity(values)
