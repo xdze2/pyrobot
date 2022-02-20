@@ -21,7 +21,7 @@ class Imu:
 
         while self.run:
             self.data.append(self.get_gyro())
-            time.sleep(.005)
+            time.sleep(.001)
 
         print('Stop recording', len(self.data))
 

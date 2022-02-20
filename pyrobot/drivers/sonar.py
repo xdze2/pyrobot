@@ -51,7 +51,7 @@ class UltraSoundSensor:
         measures = []
         for _ in range(nbr_measure):
             measures.append(self.measure_us())
-            time.sleep(.060)
+            time.sleep(.040)
         echo_time = np.mean(measures)
         return round( echo_time * self.cm_per_us + self.offset_cm )
 
