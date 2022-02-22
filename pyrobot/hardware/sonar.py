@@ -23,6 +23,7 @@ class UltraSoundSensor:
 
         self.cm_per_us = +0.0177909
         self.offset_cm = -1.6430462
+        self.distance_cm_max = 2000
 
     def measure_us(self) -> int:
         """Get total echo time in micro-seconds."""
@@ -50,13 +51,9 @@ class UltraSoundSensor:
             e2.cancel()
             raise TimeoutError
 
-    def measure_cm(self, nbr_measure: int = 3) -> float:
+    def measure_cm(self) -> float:
         """Measure distance in centimeters."""
-        measures = []
-        for _ in range(nbr_measure):
-            measures.append(self.measure_us())
-            time.sleep(0.040)
-        echo_time = np.mean(measures)
+        echo_time = self.measure_us()
         return round(echo_time * self.cm_per_us + self.offset_cm)
 
     def _callback_rising(self, _gpio_id: int, _value: bool, tick: int):
