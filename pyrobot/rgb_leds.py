@@ -3,7 +3,8 @@ from typing import Tuple, NamedTuple, List
 from .hardware.leds_sn3218 import SN3218
 
 import colorsys
-
+from matplotlib import cm as matplt_cm
+import numpy as np
 
 class RgbColor(NamedTuple):
     r: int
@@ -12,7 +13,6 @@ class RgbColor(NamedTuple):
 
     def to_rgb(self) -> "RgbColor":
         return self
-
 
 class HsvColor(NamedTuple):
     h: int
@@ -23,6 +23,33 @@ class HsvColor(NamedTuple):
         return RgbColor(
             *(int(u * 255) for u in colorsys.hsv_to_rgb(*(v / 255 for v in self)))
         )
+
+
+class ColorMap:
+
+    def __init__(self, min_value: float, max_value: float, cm_map_name: str):
+        """
+        >>> cm = ColorMap(0, 100, 'gist_heat')
+        >>> print( cm.get_rgb(50.5) )
+        RgbColor(193, 2, 0)
+        """
+        self.min_value = min_value
+        self.max_value = max_value
+        self.range = abs(self.max_value - self.min_value)
+
+        self.cmap = matplt_cm.get_cmap(cm_map_name)
+
+    def get_rgb(self, value: float) -> RgbColor:
+        value = max(self.min_value, value)
+        value = min(self.max_value, value)
+        alpha = np.sqrt( (value - self.min_value)/self.range )
+        rgba = self.cmap(alpha)
+        return RgbColor(
+            *(int(u*255) for u in rgba[:3])
+        )
+
+
+
 
 
 class RgbUnderlighting:
@@ -41,14 +68,14 @@ class RgbUnderlighting:
     def __init__(self):
 
         self.sn3218 = SN3218()
-
+        self.sn3218.start()
         # State
         self.led_colors = [HsvColor(0, 0, 0) for _name in self.LED_MAPPING]
 
     def _ones(self, hsv_color: HsvColor):
         return [hsv_color for _led_name in self.LED_MAPPING]
 
-    def change_color(self, color: HsvColor, led_id_pattern: str = ""):
+    def change_color(self, color: RgbColor, led_id_pattern: str = ""):
         """Select led."""
         colors = [
             (color if led_id_pattern in name else ancient_color)
