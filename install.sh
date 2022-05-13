@@ -2,6 +2,7 @@
 # apt
 sudo apt install -y python3-venv
 sudo apt install libatlas3-base  # for numpy
+sudo apt-get install python3-numpy 
 
 # Matplotlib
 # ImportError: libopenjp2.so.7: cannot open shared object file: No such file or directory

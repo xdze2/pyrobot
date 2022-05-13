@@ -2,3 +2,5 @@ numpy
 pigpio
 black
 rx
+matplotlib
+smbus
