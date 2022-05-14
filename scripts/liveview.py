@@ -35,7 +35,7 @@ def show(jpeg_frame):
     )
 
     cv2.imshow("liveview", img)
-    if cv2.waitKey(1) != -1:
+    if cv2.waitKey(1) == ord("q"):
         print("exit")
         cv2.destroyAllWindows()
         exit()
