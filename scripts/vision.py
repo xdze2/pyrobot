@@ -19,7 +19,7 @@ def main():
 
     with picamera.PiCamera() as camera:
         camera.resolution = (640, 480)
-        camera.framerate = 30
+        camera.framerate = 10
         time.sleep(2)
         start = time.time()
         count = 0
@@ -30,8 +30,7 @@ def main():
             publisher.send_multipart([b"cam", stream.read()])
 
             count += 1
-            if time.time() - start > 30:
-                break
+
             stream.seek(0)
             stream.truncate()
    
