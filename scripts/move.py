@@ -31,9 +31,9 @@ while True:
 
 
      if 'j' in state:
-          curve = -50
+          curve = -70
      elif 'l' in state:
-          curve = +50
+          curve = +70
      else:
           curve = 0
      

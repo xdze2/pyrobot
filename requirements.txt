@@ -1,10 +1,12 @@
-numpy
-pigpio
-black
-rx
+numpy==1.21.4
 matplotlib
+rx
+zmq
 smbus
 
-
+pigpio
+adafruit-circuitpython-mpu6050
 picamera
-zmq
+
+black
+pytest
