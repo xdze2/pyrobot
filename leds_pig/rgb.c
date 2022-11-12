@@ -14,21 +14,35 @@
 
 #define EN_GPIO 7
 
+#define DELTA 5 // int step
+
 void set_rgbled_color(int handle, int rgb_led_idx, int *color) {
-  printf("Set color for led %d: (%d %d %d)\n", rgb_led_idx, color[0], color[1],
-         color[2]);
+  // printf("Set color for led %d: (%d %d %d)\n", rgb_led_idx, color[0],
+  // color[1], color[2]);
   for (int c = 0; c < 3; c++) {
     int leg_reg = SET_PWM_REG + 3 * rgb_led_idx + c;
     i2cWriteByteData(handle, leg_reg, color[c]);
   }
-  i2cWriteByteData(handle, UPDATE_REGISTER, 0xff);
-  gpioDelay(2000);
+}
+
+int rand255() { return (int)((float)rand() / (float)RAND_MAX * 255); }
+
+int randDelta() {
+  int randbool = rand() & 1;
+  return (randbool) ? -DELTA : +DELTA;
+}
+
+int random_step(int value) {
+  value = value + randDelta();
+  value = (value > 255) ? 255 : value;
+  value = (value < 0) ? 0 : value;
+  return value;
 }
 
 int *random_color() {
   static int color[3];
   for (int i = 0; i < 3; i++) {
-    color[i] = (int)((float)rand() / (float)RAND_MAX * 255);
+    color[i] = rand255();
   }
   return color;
 }
@@ -54,9 +68,6 @@ int main() {
   unsigned int enable2 = LED_CTRL_REGISTER2;
   unsigned int enable3 = LED_CTRL_REGISTER3;
 
-  int rgb_led_idx = 1;
-  unsigned int color[3] = {125, 0, 255};
-
   i2cWriteByteData(handle, RESET_REGISTER, 0x01);
   i2cWriteByteData(handle, shutdown, 0x1); // normal operation
 
@@ -64,15 +75,31 @@ int main() {
   i2cWriteByteData(handle, enable2, 0xff);
   i2cWriteByteData(handle, enable3, 0xff);
 
-  set_rgbled_color(handle, 0, random_color());
-  set_rgbled_color(handle, 1, random_color());
-  set_rgbled_color(handle, 2, random_color());
-  set_rgbled_color(handle, 3, random_color());
-  set_rgbled_color(handle, 4, random_color());
-  set_rgbled_color(handle, 5, random_color());
+  // init
+  unsigned int colors[6][3];
+  for (int led_idx = 0; led_idx < 6; led_idx++) {
+    for (int c = 0; c < 3; c++) {
+      colors[led_idx][c] = rand255();
+    }
+  }
 
-  printf("yo\n");
-  gpioDelay(2000000);
+  int tic = time(NULL);
+  for (int t = 0; t < 2000; t++) {
+
+    for (int led_idx = 0; led_idx < 6; led_idx++) {
+      for (int c = 0; c < 3; c++) {
+        colors[led_idx][c] = random_step(colors[led_idx][c]);
+      }
+    }
+    for (int led_idx = 0; led_idx < 6; led_idx++) {
+      set_rgbled_color(handle, led_idx, colors[led_idx]);
+    }
+    i2cWriteByteData(handle, UPDATE_REGISTER, 0xff);
+
+    printf("yo: %d\n", time(NULL));
+    tic = time(NULL);
+    // gpioDelay(5000);
+  }
 
   i2cWriteByteData(handle, shutdown, 0x0); // shutdown
   i2cClose(handle);
