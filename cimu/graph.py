@@ -6,13 +6,13 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 
 
-data_filepath = "./immo.csv"
+data_filepath = "./data.txt"
 
 print(f'Read file {data_filepath}...', flush=True)
 data = np.loadtxt(data_filepath, delimiter = "\t", comments="#")
 print(f"{len(data)} lines", flush=True)
 
-time_sec = data[:, 0] / 1000
+time_sec = data[:, 0] * 1e-6
 
 
 plt.figure()

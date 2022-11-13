@@ -1,14 +1,13 @@
-#include <pigpio.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <pigpio.h>
 
 #include "MPU6050reg.h"
 
 // $ gcc -o imu imu.c -l pigpio
 // $ sudo ./imu > data.csv 
 
-// without using FIFO: dt avg (sec)= 0.8563942788557711 
 
 unsigned int chg_bit(unsigned int value, unsigned int idx, int bit) {
   // bits order:  7 ... 0
@@ -69,6 +68,20 @@ void write_bits(unsigned int handle, unsigned int reg_addr, int idx, int length,
   i2cWriteByteData(handle, reg_addr, new_value);
 }
 
+int read_byte(unsigned int handle, unsigned int reg_addr) {
+  unsigned int prev = i2cReadByteData(handle, reg_addr);
+  return prev;
+}
+
+int read_bits(unsigned int handle, unsigned int reg_addr, int idx, int length) {
+  // bits order:  7 ... 0
+  unsigned int prev = i2cReadByteData(handle, reg_addr);
+  prev = prev >> idx - length + 1;
+  int mask = ((1 << length) - 1);
+  return prev & mask;
+}
+
+
 int read_bit(unsigned int handle, unsigned int reg_addr, int idx) {
   unsigned int prev = i2cReadByteData(handle, reg_addr);
   return (prev >> idx) & 1;
@@ -95,6 +108,12 @@ int main() {
    * which is slightly better than the default internal clock source.
    */
   // setClockSources(MPU6050_CLOCK_PLL_XGYRO);
+
+  // setSleepEnabled(false); // thanks to Jack Elston for pointing this one out!
+  write_single_bit(handle, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT, 0);
+  int sleep = read_bit(handle, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT);
+  // printf("# sleep: %x \n", sleep);
+
   int clock_sel = MPU6050_CLOCK_PLL_XGYRO;
   write_bits(handle, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_CLKSEL_BIT,
              MPU6050_PWR1_CLKSEL_LENGTH, clock_sel);
@@ -106,15 +125,21 @@ int main() {
   write_bits(handle, MPU6050_RA_ACCEL_CONFIG, MPU6050_ACONFIG_AFS_SEL_BIT,
              MPU6050_ACONFIG_AFS_SEL_LENGTH, MPU6050_ACCEL_FS_2);
 
-  // setSleepEnabled(false); // thanks to Jack Elston for pointing this one out!
-  write_single_bit(handle, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT, 0);
+  // Read sample rate config
+  int divrate = read_byte(handle, MPU6050_RA_SMPLRT_DIV);
+  printf("# Rate div: %d \n", divrate + 1);
 
-  int sleep = read_bit(handle, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT);
-  // printf("sleep: %x \n", sleep);
+  // Set digital low pass filter config (DLPF)
+  // 3, sample rate
+  write_bits(handle, MPU6050_RA_CONFIG, MPU6050_CFG_DLPF_CFG_BIT, MPU6050_CFG_DLPF_CFG_LENGTH, 3);
+  int lowpass = read_bits(handle, MPU6050_RA_CONFIG, MPU6050_CFG_DLPF_CFG_BIT, MPU6050_CFG_DLPF_CFG_LENGTH);
+  printf("# lowpass: %d \n", lowpass);
 
-  gpioDelay(100000);
 
-  int nbr;
+  gpioDelay(1000000); // wait 1s
+
+  const int NBR_MEASURE = 20000;
+  int nbr_read;
   char buf[32];
   signed short int data[7];
 
@@ -122,9 +147,13 @@ int main() {
   int delta_us;
   timespec_get(&start, TIME_UTC);
 
-  printf("# t_ms\tax\tay\taz\tT_mdeg\twx\twy\twz\n");
-  for (int k = 0; k < 5000; k++) {
-    nbr = i2cReadI2CBlockData(handle, MPU6050_RA_ACCEL_XOUT_H, buf, 14);
+  FILE* f;
+  f = fopen("data.txt", "w");
+
+  fprintf(f, "# t_us\tax\tay\taz\tT_mdeg\twx\twy\twz\n");
+  printf("start...");
+  for (int k = 0; k < NBR_MEASURE; k++) {
+    nbr_read = i2cReadI2CBlockData(handle, MPU6050_RA_ACCEL_XOUT_H, buf, 14);
     timespec_get(&end, TIME_UTC);
     for (int i = 0; i < 7; i++) {
       data[i] = (((int)buf[2 * i]) << 8) | (int)buf[2 * i + 1];
@@ -136,16 +165,24 @@ int main() {
     delta_us = (end.tv_sec - start.tv_sec) * 1000000 +
                (end.tv_nsec - start.tv_nsec) / 1000;
 
-    // print line
-    printf("%d", delta_us);
+    // Save line
+    fprintf(f, "%d", delta_us);
     for (int i = 0; i < 7; i++) {
-      printf("\t%d", data[i]);
+      // printf("\t%d", data[i]);
+      fprintf(f, "\t%d", data[i]);
     }
-    printf("\n");
+    fprintf(f, "\n");
 
-    gpioDelay(5);
+    if (k % 1000 == 0) printf("+1k: %d \n", delta_us);
+    gpioDelay(10);
   }
 
+  int total_delta_us = (end.tv_sec - start.tv_sec) * 1000000 +
+                   (end.tv_nsec - start.tv_nsec) / 1000;
+  printf("dt: %d us\n", total_delta_us/NBR_MEASURE);
+
+  fclose(f); 
+  printf("File saved");
   // Set sleep = 1
   write_single_bit(handle, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT, 1);
   i2cClose(handle);
