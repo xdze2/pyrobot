@@ -20,9 +20,7 @@ mpu.cycle = True
 recordings = []
 for k in range(200):
 
-    recordings.append(
-        (time.perf_counter(), *mpu.acceleration)
-    )
+    recordings.append((time.perf_counter(), *mpu.acceleration))
     print(k)
 
     # print("Gyro X:%.2f, Y: %.2f, Z: %.2f degrees/s"%(mpu.gyro))
@@ -30,14 +28,14 @@ for k in range(200):
     # print("Temperature: %.2f C"%mpu.temperature)
     # print("")
     # time.sleep(1)
-    
+
 recordings = np.array(recordings)
 
-plt.plot(recordings[:, 0], recordings[:, 1], label='ax')
-plt.plot(recordings[:, 0], recordings[:, 2], label='ay')
-plt.plot(recordings[:, 0], recordings[:, 3], label='az')
-Path('output').mkdir(parents=True, exist_ok=True)
-plt.savefig('output/acc_exy.png')
+plt.plot(recordings[:, 0], recordings[:, 1], label="ax")
+plt.plot(recordings[:, 0], recordings[:, 2], label="ay")
+plt.plot(recordings[:, 0], recordings[:, 3], label="az")
+Path("output").mkdir(parents=True, exist_ok=True)
+plt.savefig("output/acc_exy.png")
 
 
 """

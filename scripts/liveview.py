@@ -30,9 +30,7 @@ cv2.namedWindow("liveview")
 
 def show(jpeg_frame):
 
-    img = cv2.imdecode(
-        np.frombuffer(jpeg_frame, dtype=np.uint8), cv2.IMREAD_UNCHANGED
-    )
+    img = cv2.imdecode(np.frombuffer(jpeg_frame, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
 
     cv2.imshow("liveview", img)
     if cv2.waitKey(1) == ord("q"):

@@ -6,8 +6,6 @@ import time
 import zmq
 
 
-
-
 def main():
     """main method"""
 
@@ -15,7 +13,6 @@ def main():
     context = zmq.Context()
     publisher = context.socket(zmq.PUB)
     publisher.bind("tcp://*:5563")
-
 
     with picamera.PiCamera() as camera:
         camera.resolution = (640, 480)
@@ -33,10 +30,8 @@ def main():
 
             stream.seek(0)
             stream.truncate()
-   
-            print('pub')
 
-
+            print("pub")
 
     # We never get here but clean up anyhow
     publisher.close()
@@ -45,8 +40,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-
-

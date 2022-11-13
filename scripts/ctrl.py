@@ -11,10 +11,10 @@ publisher.connect(f"tcp://{ip_address}:5564")
 
 
 def on_press(key):
-    
+
     try:
         print("alphanumeric key {0} pressed".format(key.char))
-        publisher.send(key.char.encode('utf-8'))
+        publisher.send(key.char.encode("utf-8"))
     except AttributeError:
         print("special key {0} pressed".format(key))
         pass

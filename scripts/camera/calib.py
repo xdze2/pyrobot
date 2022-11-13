@@ -73,20 +73,26 @@ board = cv2.aruco.GridBoard_create(
 )
 
 
-
 imsize = (2465, 3280)
 
-cameraMatrixInit = np.array([[ 1000.,    0., imsize[0]/2.],
-                             [    0., 1000., imsize[1]/2.],
-                             [    0.,    0.,           1.]])
+cameraMatrixInit = np.array(
+    [[1000.0, 0.0, imsize[0] / 2.0], [0.0, 1000.0, imsize[1] / 2.0], [0.0, 0.0, 1.0]]
+)
 distCoeffsInit = np.zeros((5, 1))
 
 # (ret, camera_matrix, distortion_coefficients0,
-    #  rotation_vectors, translation_vectors,
-    #  stdDeviationsIntrinsics, stdDeviationsExtrinsics,
-    #  perViewErrors) 
-      
-ret, camera_mat, distortion_coeff, rotation_vec, translation_vec, *args = cv2.aruco.calibrateCameraAruco(
+#  rotation_vectors, translation_vectors,
+#  stdDeviationsIntrinsics, stdDeviationsExtrinsics,
+#  perViewErrors)
+
+(
+    ret,
+    camera_mat,
+    distortion_coeff,
+    rotation_vec,
+    translation_vec,
+    *args,
+) = cv2.aruco.calibrateCameraAruco(
     allCornersConcatenated,
     allIdsConcatenated,
     markerCounterPerFrame,
@@ -102,20 +108,16 @@ ret, camera_mat, distortion_coeff, rotation_vec, translation_vec, *args = cv2.ar
 print(ret)
 pprint(camera_mat)
 
-np.savetxt('config/camera_matrice.txt', camera_mat, header=f"image size={imsize}")
-np.savetxt('config/camera_distortion.txt', distortion_coeff, header=f"image size={imsize}")
+np.savetxt("config/camera_matrice.txt", camera_mat, header=f"image size={imsize}")
+np.savetxt(
+    "config/camera_distortion.txt", distortion_coeff, header=f"image size={imsize}"
+)
 
 
 for img_path in img_paths:
     print(img_path)
     image = cv2.imread(str(img_path))
 
-
-    img_undist = cv2.undistort(
-        image,
-        camera_mat,
-        distortion_coeff,
-        None
-    )
+    img_undist = cv2.undistort(image, camera_mat, distortion_coeff, None)
 
     cv2.imwrite(str(Path("output", f"undistort_{img_path.name}")), image)
