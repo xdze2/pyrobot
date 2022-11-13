@@ -1,9 +1,12 @@
-import time
-from threading import Thread
-
 import zmq
+
 from pyrobot.drive import Mobility
 
+
+"""
+Client ctrl robot movement.
+To use with remote_ctrl.py on a host PC.
+"""
 
 # Prepare our context and publisher
 context = zmq.Context()
