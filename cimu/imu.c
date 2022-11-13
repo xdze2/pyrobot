@@ -120,7 +120,7 @@ int main() {
   timespec_get(&start, TIME_UTC);
 
   printf("# t_ms\tax\tay\taz\tT_mdeg\twx\twy\twz\n");
-  for (int k = 0; k < 2000; k++) {
+  for (int k = 0; k < 10000; k++) {
     nbr = i2cReadI2CBlockData(handle, MPU6050_RA_ACCEL_XOUT_H, buf, 14);
     timespec_get(&end, TIME_UTC);
     for (int i = 0; i < 7; i++) {
@@ -133,7 +133,7 @@ int main() {
     delta_us = (end.tv_sec - start.tv_sec) * 1000000 +
                (end.tv_nsec - start.tv_nsec) / 1000;
 
-    // print lint
+    // print line
     printf("%d", delta_us);
     for (int i = 0; i < 7; i++) {
       printf("\t%d", data[i]);
