@@ -1,26 +1,21 @@
-import time
 import asyncio
 
-import rx
-from rx.scheduler.eventloop import AsyncIOScheduler
-import rx.operators as op
-
-import time
-import matplotlib.pyplot as plt
 import numpy as np
 import pigpio
-from pyrobot.drive import Mobility
-from pyrobot.hardware.sonar import UltraSoundSensor
-from pyrobot.gpio_mapping import SonarGpio
-from pyrobot.rgb_leds import RgbUnderlighting, HsvColor, ColorMap
+import rx
+import rx.operators as op
+from rx.scheduler.eventloop import AsyncIOScheduler
 
+from pyrobot.drive import Mobility
+from pyrobot.gpio_mapping import SonarGpio
+from pyrobot.hardware.sonar import UltraSoundSensor
+from pyrobot.rgb_leds import ColorMap, HsvColor, RgbUnderlighting
 
 gpio = pigpio.pi()
 
 distance_sensor = UltraSoundSensor(
     gpio_echo=SonarGpio.ECHO, gpio_trig=SonarGpio.TRIG, gpio=gpio
 )
-
 
 mob = Mobility()
 
@@ -37,7 +32,7 @@ print("init done")
 
 distance_measure = rx.interval(0.100, scheduler=scheduler).pipe(
     op.map(lambda t: (t, distance_sensor.measure_cm())),
-    op.scan(lambda acc, x: (x[0], 0.5 * acc[1] + 0.5 * x[1])),
+    op.scan(lambda acc, x: (x[0], 0.5 * acc[1] + 0.5 * x[1])),  # moving average
 )
 (
     distance_measure.pipe(
@@ -52,6 +47,8 @@ distance_measure = rx.interval(0.100, scheduler=scheduler).pipe(
 distance_measure.subscribe(
     lambda x: print(x),
 )
+
+
 # test.pipe(op.delay(1.4), op.map(lambda x:x**2)).subscribe(
 #    lambda x: print("The square is {0}".format(x)),
 #    on_error = lambda e: print("Error : {0}".format(e)),
