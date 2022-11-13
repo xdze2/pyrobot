@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <pigpio.h>
+#include <pigpiod_if2.h>
 
 #include "MPU6050reg.h"
 
-// $ gcc -o imu imu.c -l pigpio
+// $ gcc -o imu imu.c -l pigpiod_if2
 // $ sudo ./imu > data.csv 
 
 
@@ -54,50 +54,48 @@ void printbin(int val) {
   }
 }
 
-void write_single_bit(unsigned int handle, unsigned int reg_addr, int idx,
+void write_single_bit(int pi, unsigned int handle, unsigned int reg_addr, int idx,
                       int bit_value) {
-  unsigned int prev = i2cReadByteData(handle, reg_addr);
+  unsigned int prev = i2c_read_byte_data(pi, handle, reg_addr);
   unsigned int new_value = chg_bit(prev, idx, bit_value);
-  i2cWriteByteData(handle, reg_addr, new_value);
+  i2c_write_byte_data(pi, handle, reg_addr, new_value);
 }
 
-void write_bits(unsigned int handle, unsigned int reg_addr, int idx, int length,
+void write_bits(int pi, unsigned int handle, unsigned int reg_addr, int idx, int length,
                 int value) {
-  unsigned int prev = i2cReadByteData(handle, reg_addr);
+  unsigned int prev = i2c_read_byte_data(pi, handle, reg_addr);
   unsigned int new_value = chg_bits(prev, idx, length, value);
-  i2cWriteByteData(handle, reg_addr, new_value);
+  i2c_write_byte_data(pi, handle, reg_addr, new_value);
 }
 
-int read_byte(unsigned int handle, unsigned int reg_addr) {
-  unsigned int prev = i2cReadByteData(handle, reg_addr);
+int read_byte(int pi, unsigned int handle, unsigned int reg_addr) {
+  unsigned int prev = i2c_read_byte_data(pi, handle, reg_addr);
   return prev;
 }
 
-int read_bits(unsigned int handle, unsigned int reg_addr, int idx, int length) {
+int read_bits(int pi, unsigned int handle, unsigned int reg_addr, int idx, int length) {
   // bits order:  7 ... 0
-  unsigned int prev = i2cReadByteData(handle, reg_addr);
+  unsigned int prev = i2c_read_byte_data(pi, handle, reg_addr);
   prev = prev >> idx - length + 1;
   int mask = ((1 << length) - 1);
   return prev & mask;
 }
 
 
-int read_bit(unsigned int handle, unsigned int reg_addr, int idx) {
-  unsigned int prev = i2cReadByteData(handle, reg_addr);
+int read_bit(int pi, unsigned int handle, unsigned int reg_addr, int idx) {
+  unsigned int prev = i2c_read_byte_data(pi, handle, reg_addr);
   return (prev >> idx) & 1;
 }
 
 int main() {
-  int handle;
+  int pi, handle;
 
-  if (gpioInitialise() < 0)
-    return 1;
-
-  handle = i2cOpen(1, MPU6050_DEFAULT_ADDRESS, 0);
+  pi = pigpio_start(NULL, NULL);
+  handle = i2c_open(pi, 1, MPU6050_DEFAULT_ADDRESS, 0);
   // printf("open i2c bus at %x \n", MPU6050_DEFAULT_ADDRESS);
 
   int device_id;
-  device_id = i2cReadByteData(handle, MPU6050_RA_WHO_AM_I);
+  device_id = i2c_read_byte_data(pi, handle, MPU6050_RA_WHO_AM_I);
   // printf("device_id: %x \n", device_id);
 
   /** Power on and prepare for general usage.
@@ -110,33 +108,33 @@ int main() {
   // setClockSources(MPU6050_CLOCK_PLL_XGYRO);
 
   // setSleepEnabled(false); // thanks to Jack Elston for pointing this one out!
-  write_single_bit(handle, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT, 0);
-  int sleep = read_bit(handle, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT);
+  write_single_bit(pi, handle, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT, 0);
+  int sleep = read_bit(pi, handle, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT);
   // printf("# sleep: %x \n", sleep);
 
   int clock_sel = MPU6050_CLOCK_PLL_XGYRO;
-  write_bits(handle, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_CLKSEL_BIT,
+  write_bits(pi, handle, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_CLKSEL_BIT,
              MPU6050_PWR1_CLKSEL_LENGTH, clock_sel);
 
   // setFullScaleGyroRange(MPU6050_GYRO_FS_250);
-  write_bits(handle, MPU6050_RA_GYRO_CONFIG, MPU6050_GCONFIG_FS_SEL_BIT,
+  write_bits(pi, handle, MPU6050_RA_GYRO_CONFIG, MPU6050_GCONFIG_FS_SEL_BIT,
              MPU6050_GCONFIG_FS_SEL_LENGTH, MPU6050_GYRO_FS_250);
   // setFullScaleAccelRange(MPU6050_ACCEL_FS_2);
-  write_bits(handle, MPU6050_RA_ACCEL_CONFIG, MPU6050_ACONFIG_AFS_SEL_BIT,
+  write_bits(pi, handle, MPU6050_RA_ACCEL_CONFIG, MPU6050_ACONFIG_AFS_SEL_BIT,
              MPU6050_ACONFIG_AFS_SEL_LENGTH, MPU6050_ACCEL_FS_2);
 
   // Read sample rate config
-  int divrate = read_byte(handle, MPU6050_RA_SMPLRT_DIV);
+  int divrate = read_byte(pi, handle, MPU6050_RA_SMPLRT_DIV);
   printf("# Rate div: %d \n", divrate + 1);
 
   // Set digital low pass filter config (DLPF)
   // 3, sample rate
-  write_bits(handle, MPU6050_RA_CONFIG, MPU6050_CFG_DLPF_CFG_BIT, MPU6050_CFG_DLPF_CFG_LENGTH, 3);
-  int lowpass = read_bits(handle, MPU6050_RA_CONFIG, MPU6050_CFG_DLPF_CFG_BIT, MPU6050_CFG_DLPF_CFG_LENGTH);
+  write_bits(pi, handle, MPU6050_RA_CONFIG, MPU6050_CFG_DLPF_CFG_BIT, MPU6050_CFG_DLPF_CFG_LENGTH, 3);
+  int lowpass = read_bits(pi, handle, MPU6050_RA_CONFIG, MPU6050_CFG_DLPF_CFG_BIT, MPU6050_CFG_DLPF_CFG_LENGTH);
   printf("# lowpass: %d \n", lowpass);
 
 
-  gpioDelay(1000000); // wait 1s
+  // gpio_delay(1000000); // wait 1s
 
   const int NBR_MEASURE = 20000;
   int nbr_read;
@@ -153,7 +151,7 @@ int main() {
   fprintf(f, "# t_us\tax\tay\taz\tT_mdeg\twx\twy\twz\n");
   printf("start...");
   for (int k = 0; k < NBR_MEASURE; k++) {
-    nbr_read = i2cReadI2CBlockData(handle, MPU6050_RA_ACCEL_XOUT_H, buf, 14);
+    nbr_read = i2c_read_i2c_block_data(pi, handle, MPU6050_RA_ACCEL_XOUT_H, buf, 14);
     timespec_get(&end, TIME_UTC);
     for (int i = 0; i < 7; i++) {
       data[i] = (((int)buf[2 * i]) << 8) | (int)buf[2 * i + 1];
@@ -174,7 +172,7 @@ int main() {
     fprintf(f, "\n");
 
     if (k % 1000 == 0) printf("+1k: %d \n", delta_us);
-    gpioDelay(10);
+    // gpioDelay(10);
   }
 
   int total_delta_us = (end.tv_sec - start.tv_sec) * 1000000 +
@@ -184,7 +182,7 @@ int main() {
   fclose(f); 
   printf("File saved");
   // Set sleep = 1
-  write_single_bit(handle, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT, 1);
-  i2cClose(handle);
-  gpioTerminate();
+  write_single_bit(pi, handle, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT, 1);
+  i2c_close(pi, handle);
+  pigpio_stop(pi);
 }
