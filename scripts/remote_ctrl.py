@@ -5,6 +5,8 @@ from pynput import keyboard
 
 """
 Host remote ctrl using keyboard.
+
+Start move.py on the robot.
 """
 
 IP_ADDRESS = "192.168.1.72"
