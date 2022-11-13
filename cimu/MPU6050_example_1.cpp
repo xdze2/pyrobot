@@ -50,7 +50,7 @@ gcc -o MPU6050_example1 ./MPU6050_example_1.cpp \
 
 int main() {
   printf("MPU6050 3-axis acceleromter example program\n");
-  I2Cdev::initialize();
+  I2Cdev::initialize(0x68);
   MPU6050 accelgyro ;
   int16_t ax, ay, az;
   int16_t gx, gy, gz;

@@ -32,21 +32,21 @@ THE SOFTWARE.
 
 I2Cdev::I2Cdev() { }
 
-void I2Cdev::initialize() {
-  bcm2835_init();
-  bcm2835_i2c_set_baudrate( i2c_baudrate  );
+void I2Cdev::initialize(unsigned int device_addr) {
+  gpioInitialise();
+  handle = i2cOpen(1, device_addr, 0)
 }
 
 /** Enable or disable I2C, 
  * @param isEnabled true = enable, false = disable
  */
 void I2Cdev::enable(bool isEnabled) {
-  if ( set_I2C_pins ){
-    if (isEnabled)
-      bcm2835_i2c_end();
-    else
-      bcm2835_i2c_begin() ;
-  }
+  // if ( set_I2C_pins ){
+  //   if (isEnabled)
+  //     bcm2835_i2c_end();
+  //   else
+  //     bcm2835_i2c_begin() ;
+  // }
 }
 
 char sendBuf[256];
@@ -62,12 +62,10 @@ char recvBuf[256];
  * @return Status of read operation (true = success)
  */
 int8_t I2Cdev::readBit(uint8_t devAddr, uint8_t regAddr, uint8_t bitNum, uint8_t *data) {
-  bcm2835_i2c_setSlaveAddress(devAddr);
-  sendBuf[0] = regAddr;
-  uint8_t response = bcm2835_i2c_write_read_rs(sendBuf, 1, recvBuf, 1);
-  *data = recvBuf[1] & (1 << bitNum);
-  return response == BCM2835_I2C_REASON_OK ;
-}
+  unsigned int prev = i2cReadByteData(handle, regAddr);  
+  *data = prev & (1 << bitNum);
+  return 1;
+
 
 /** Read multiple bits from an 8-bit device register.
  * @param devAddr I2C slave device address
@@ -103,11 +101,9 @@ int8_t I2Cdev::readBits(uint8_t devAddr, uint8_t regAddr, uint8_t bitStart, uint
  * @return Status of read operation (true = success)
  */
 int8_t I2Cdev::readByte(uint8_t devAddr, uint8_t regAddr, uint8_t *data) {
-  bcm2835_i2c_setSlaveAddress(devAddr);
-  sendBuf[0] = regAddr;
-  uint8_t response = bcm2835_i2c_write_read_rs(sendBuf, 1, recvBuf, 1);
-  data[0] = (uint8_t) recvBuf[0];
-  return response == BCM2835_I2C_REASON_OK;
+  unsigned int prev = i2cReadByteData(handle, regAddr);  
+  data[0] = (uint8_t) prev;
+  return 1;
 }
 
 /** Read multiple bytes from an 8-bit device register.

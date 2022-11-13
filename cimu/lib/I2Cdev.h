@@ -34,8 +34,8 @@ THE SOFTWARE.
 #error A C++ compiler is required!
 #endif 
 
-#include <bcm2835.h>
-#include <math.h> // required for BMP180
+#include <pigpio.h>
+#include <math.h>   // required for BMP180
 #include <stdlib.h> // required for MPU6060
 #include <string.h> // required for MPU6060
 
@@ -48,10 +48,11 @@ THE SOFTWARE.
 //uint32_t i2c_baudrate = 400000 ; //400 kHz, 
 
 class I2Cdev {
+   static int handle;
  public:
         I2Cdev();
 
-        static void initialize();
+        static void initialize(unsigned int device_addr);
         static void enable(bool isEnabled);
 
         static int8_t readBit(uint8_t devAddr, uint8_t regAddr, uint8_t bitNum, uint8_t *data);
