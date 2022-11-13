@@ -78,11 +78,11 @@ int main() {
     return 1;
 
   handle = i2cOpen(1, MPU6050_DEFAULT_ADDRESS, 0);
-  printf("open i2c bus at %x \n", MPU6050_DEFAULT_ADDRESS);
+  // printf("open i2c bus at %x \n", MPU6050_DEFAULT_ADDRESS);
 
   int device_id;
   device_id = i2cReadByteData(handle, MPU6050_RA_WHO_AM_I);
-  printf("device_id: %x \n", device_id);
+  // printf("device_id: %x \n", device_id);
 
   /** Power on and prepare for general usage.
    * This will activate the device and take it out of sleep mode (which must be
@@ -107,7 +107,7 @@ int main() {
   write_single_bit(handle, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT, 0);
 
   int sleep = read_bit(handle, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT);
-  printf("sleep: %x \n", sleep);
+  // printf("sleep: %x \n", sleep);
 
   gpioDelay(100000);
 
@@ -119,15 +119,16 @@ int main() {
   int delta_us;
   timespec_get(&start, TIME_UTC);
 
-  for (int k = 0; k < 50; k++) {
+  printf("# t_ms\tax\tay\taz\tT_mdeg\twx\twy\twz\n");
+  for (int k = 0; k < 2000; k++) {
     nbr = i2cReadI2CBlockData(handle, MPU6050_RA_ACCEL_XOUT_H, buf, 14);
     timespec_get(&end, TIME_UTC);
     for (int i = 0; i < 7; i++) {
       data[i] = (((int)buf[2 * i]) << 8) | (int)buf[2 * i + 1];
     }
 
-    // Convert to deg C
-    data[3] = data[3] / 340 + 36;
+    // Convert to m deg C
+    data[3] = (1000 * data[3]) / 340 + 36530;
 
     delta_us = (end.tv_sec - start.tv_sec) * 1000000 +
                (end.tv_nsec - start.tv_nsec) / 1000;
@@ -135,13 +136,15 @@ int main() {
     // print lint
     printf("%d", delta_us);
     for (int i = 0; i < 7; i++) {
-      printf("\t %d", data[i]);
+      printf("\t%d", data[i]);
     }
     printf("\n");
 
     gpioDelay(5);
   }
+
+  // Set sleep = 1
+  write_single_bit(handle, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT, 1);
   i2cClose(handle);
   gpioTerminate();
-  printf("\n");
 }
