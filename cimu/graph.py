@@ -27,6 +27,17 @@ plt.savefig('graph.png');
 print(f"Graph saved to {graph_path}")
 
 
+plt.figure()
+plt.plot(time_sec, data[:, 5], label="wx");
+plt.plot(time_sec, data[:, 6], label="wy");
+plt.plot(time_sec, data[:, 7], label="wz");
+plt.legend();
+plt.xlabel('time [sec]'); plt.ylabel('w [°/s]');
+graph_path = f"{Path(data_filepath).stem}.png"
+plt.tight_layout();
+plt.savefig('graph_w.png');
+print(f"Graph saved to {graph_path}")
+
 
 dt = np.diff(time_sec)
 print('dt avg (sec)=', np.mean(dt))
@@ -38,6 +49,7 @@ print('dt max', np.max(dt))
 def dbl_integrate(x):
     zero = np.mean(x[:100])
     return np.cumsum(np.cumsum(x - zero))
+
 
 plt.figure()
 plt.plot(dbl_integrate(data[:, 1]), label="x");
