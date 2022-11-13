@@ -18,7 +18,7 @@ int main() {
 
   gpio = 22;
   for (int i = 0; i < 10 ; i++){
-    gpioSetMode(gpio, PI_INPUT);
+    gpioSetMode(gpio, PI_OUTPUT);
     gpioWrite(gpio, 1);
     gpioDelay(500000);
 
