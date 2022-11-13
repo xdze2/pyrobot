@@ -133,3 +133,6 @@ dmypy.json
 
 
 bin/
+
+*.csv
+*.png
