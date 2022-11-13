@@ -44,7 +44,7 @@ plt.plot(dbl_integrate(data[:, 1]), label="x");
 plt.plot(dbl_integrate(data[:, 2]), label="y");
 plt.plot(dbl_integrate(data[:, 3]), label="z");
 plt.legend();
-plt.xlabel('time [sec]'); plt.ylabel('acc [mg]');
+plt.xlabel('time [sec]'); plt.ylabel('pos [m]');
 graph_path = f"{Path(data_filepath).stem}.png"
 plt.tight_layout();
 plt.savefig('graph_x.png');
