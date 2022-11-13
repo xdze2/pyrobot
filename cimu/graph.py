@@ -6,6 +6,18 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 
 
+
+def integrate(x):
+    zero = np.mean(x[:100])
+    return np.cumsum(x - zero)
+
+
+def dbl_integrate(x):
+    zero = np.mean(x[:100])
+    return np.cumsum(np.cumsum(x - zero))
+
+
+
 data_filepath = "./data.txt"
 
 print(f'Read file {data_filepath}...', flush=True)
@@ -14,7 +26,7 @@ print(f"{len(data)} lines", flush=True)
 
 time_sec = data[:, 0] * 1e-6
 
-
+# Acc
 plt.figure()
 plt.plot(time_sec, data[:, 1], label="ax");
 plt.plot(time_sec, data[:, 2], label="ay");
@@ -26,7 +38,7 @@ plt.tight_layout();
 plt.savefig('graph.png');
 print(f"Graph saved to {graph_path}")
 
-
+# Rotation
 plt.figure()
 plt.plot(time_sec, data[:, 5], label="wx");
 plt.plot(time_sec, data[:, 6], label="wy");
@@ -39,6 +51,16 @@ plt.savefig('graph_w.png');
 print(f"Graph saved to {graph_path}")
 
 
+plt.figure()
+plt.plot(time_sec, integrate(data[:, 7]), label="wz");
+plt.legend();
+plt.xlabel('time [sec]'); plt.ylabel('w [°/s]');
+graph_path = f"{Path(data_filepath).stem}.png"
+plt.tight_layout();
+plt.savefig('graph_wZ.png');
+print(f"Graph saved to {graph_path}")
+
+# Time ?
 dt = np.diff(time_sec)
 print('dt avg (sec)=', np.mean(dt))
 print('dt min', np.min(dt))
@@ -46,11 +68,8 @@ print('dt max', np.max(dt))
 
 
 
-def dbl_integrate(x):
-    zero = np.mean(x[:100])
-    return np.cumsum(np.cumsum(x - zero))
 
-
+# Position
 plt.figure()
 plt.plot(dbl_integrate(data[:, 1]), label="x");
 plt.plot(dbl_integrate(data[:, 2]), label="y");
