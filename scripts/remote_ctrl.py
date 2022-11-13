@@ -3,18 +3,23 @@ from typing import Callable
 import zmq
 from pynput import keyboard
 
-ip_address = "192.168.1.72"
+"""
+Host remote ctrl using keyboard.
+"""
 
+IP_ADDRESS = "192.168.1.72"
 
 context = zmq.Context()
 publisher = context.socket(zmq.PAIR)
 publisher.setsockopt(zmq.LINGER, 0)
-publisher.connect(f"tcp://{ip_address}:5564")
+url = f"tcp://{IP_ADDRESS}:5564"
+publisher.connect(url)
 
+print(f"Connect to socket: {url}...")
 
 class KeyState:
     def __init__(self, on_change: Callable):
-        self.white_list = 'ijkl'
+        self.white_list = "ijkl"
         self.on_change = on_change
         self.state = set()
         self.listener = keyboard.Listener(
@@ -25,13 +30,13 @@ class KeyState:
     def _on_press(self, key):
 
         try:
-            key = key.char  
+            key = key.char
             # print("alphanumeric key {0} pressed".format(key.char))
             if key is not None and key in self.white_list and key not in self.state:
                 self.state.add(key)
                 self.update_state()
             else:
-                print('{key} skipped')
+                print("{key} skipped")
         except AttributeError:
             # print("special key {0} pressed".format(key))
             pass
@@ -57,8 +62,6 @@ def on_new_state(state: str):
 
 keyboard_state = KeyState(on_new_state)
 
-print('Use z q s d keys...')
+print("Use i j k l keys...")
 keyboard_state.listener.join()
-# # ...or, in a non-blocking fashion:
-# listener = keyboard.Listener(on_press=on_press, on_release=on_release)
-# listener.start()
+
