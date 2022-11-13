@@ -13,7 +13,7 @@ IP_ADDRESS = "192.168.1.72"
 
 context = zmq.Context()
 publisher = context.socket(zmq.PAIR)
-publisher.setsockopt(zmq.LINGER, 0)
+publisher.setsockopt(zmq.LINGER, 0)  # 0 specifies no linger period. Pending messages shall be discarded immediately
 url = f"tcp://{IP_ADDRESS}:5564"
 publisher.connect(url)
 
