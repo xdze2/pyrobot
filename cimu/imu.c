@@ -6,6 +6,9 @@
 #include "MPU6050reg.h"
 
 // $ gcc -o imu imu.c -l pigpio
+// $ sudo ./imu > data.csv 
+
+// without using FIFO: dt avg (sec)= 0.8563942788557711 
 
 unsigned int chg_bit(unsigned int value, unsigned int idx, int bit) {
   // bits order:  7 ... 0
@@ -120,7 +123,7 @@ int main() {
   timespec_get(&start, TIME_UTC);
 
   printf("# t_ms\tax\tay\taz\tT_mdeg\twx\twy\twz\n");
-  for (int k = 0; k < 10000; k++) {
+  for (int k = 0; k < 5000; k++) {
     nbr = i2cReadI2CBlockData(handle, MPU6050_RA_ACCEL_XOUT_H, buf, 14);
     timespec_get(&end, TIME_UTC);
     for (int i = 0; i < 7; i++) {
