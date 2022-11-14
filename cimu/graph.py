@@ -68,6 +68,16 @@ print('dt max', np.max(dt))
 
 
 
+# Rotation
+plt.figure()
+plt.hist(data[:, 7], bins=31)
+plt.legend();
+plt.xlabel('wz'); plt.ylabel('#');
+graph_path = f"{Path(data_filepath).stem}_hist.png"
+plt.tight_layout();
+plt.savefig(graph_path);
+print(f"Graph saved to {graph_path}")
+
 
 # Position
 plt.figure()
