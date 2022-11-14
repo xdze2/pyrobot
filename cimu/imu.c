@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 #include <pigpiod_if2.h>
 
 #include "MPU6050reg.h"
@@ -90,6 +91,8 @@ int read_bit(int pi, unsigned int handle, unsigned int reg_addr, int idx) {
 int main() {
   int pi, handle;
 
+  printf("(start $ sudo pigpiod before)");
+
   pi = pigpio_start(NULL, NULL);
   handle = i2c_open(pi, 1, MPU6050_DEFAULT_ADDRESS, 0);
   // printf("open i2c bus at %x \n", MPU6050_DEFAULT_ADDRESS);
@@ -109,8 +112,8 @@ int main() {
 
   // setSleepEnabled(false); // thanks to Jack Elston for pointing this one out!
   write_single_bit(pi, handle, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT, 0);
-  int sleep = read_bit(pi, handle, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT);
-  // printf("# sleep: %x \n", sleep);
+  int issleeping = read_bit(pi, handle, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT);
+  // printf("# issleeping: %x \n", sleep);
 
   int clock_sel = MPU6050_CLOCK_PLL_XGYRO;
   write_bits(pi, handle, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_CLKSEL_BIT,
@@ -135,6 +138,7 @@ int main() {
 
 
   // gpio_delay(1000000); // wait 1s
+  sleep(2); // imu warmup period
 
   const int NBR_MEASURE = 20000;
   int nbr_read;
