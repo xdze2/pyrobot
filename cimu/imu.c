@@ -36,7 +36,7 @@ int main() {
   write_single_bit(pi, handle, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT,
                    0);
   int issleeping =
-      read_bit(pi, handle, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT);
+      read_single_bit(pi, handle, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT);
   // printf("# issleeping: %x \n", sleep);
 
   int clock_sel = MPU6050_CLOCK_PLL_XGYRO;
