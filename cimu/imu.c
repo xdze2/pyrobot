@@ -1,8 +1,8 @@
-#include <pigpiod_if2.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+#include <pigpiod_if2.h>
 
 #include "MPU6050reg.h"
 

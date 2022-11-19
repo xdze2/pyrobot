@@ -1,6 +1,8 @@
 	
+OUTDIR = ./bin
+
 imu: imu.c
-	gcc -o imu imu.c -l pigpiod_if2
+	gcc -o $(OUTDIR)/imu -l pigpiod_if2 imu.c
 
 graph:
 	python graph.py
