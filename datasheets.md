@@ -41,6 +41,7 @@
   * https://www.kernel.org/doc/html/v4.12/driver-api/iio/buffers.html
   * https://github.com/raspberrypi/linux/blob/rpi-4.14.y/arch/arm/boot/dts/overlays/README
 
+
 On the raspberry:
 
 ```
@@ -48,10 +49,31 @@ $ sudo dtoverlay mpu6050
 $ sudo dtoverlay -l
 ```
 
+```
+$ dtoverlay -h mpu6050
+Name:   mpu6050
+
+Info:   Overlay for i2c connected mpu6050 imu
+
+Usage:  dtoverlay=mpu6050,<param>=<val>
+
+Params: interrupt               GPIO pin for interrupt (default 4)
+        addr                    I2C address of the device (default 0x68)
+```
+
+
+
 - How to set, read buffer and use trigger ?
 
 - DMP not accesible, nor documented, but with the Adafruit lib (Jeff rowberg I2cdev) ? https://www.i2cdevlib.com/devices/mpu6050#source
 - https://forums.raspberrypi.com/viewtopic.php?p=1829286&hilit=i2cdevlib#p1829286
 
+
 ### libiio python binding
 - http://analogdevicesinc.github.io/libiio/master/python/device.html
+
+
+```
+$ sudo apt install libiio-utils
+$ iio_info 
+```
