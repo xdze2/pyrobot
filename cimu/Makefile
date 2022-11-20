@@ -10,3 +10,9 @@ imuZ: imuZ.c
 
 graph:
 	python graph.py
+
+
+format:
+	clang-format -i imuZ.c
+	clang-format -i mpu_fct.c
+	clang-format -i mpu_fct.h
