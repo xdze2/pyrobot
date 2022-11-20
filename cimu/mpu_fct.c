@@ -53,11 +53,30 @@ void printbin(int val) {
 
 // Read and Write to i2c interfaces
 
-void write_single_bit(int pi, unsigned int handle, unsigned int reg_addr,
+typedef struct {
+    int pi;
+    unsigned int handle;
+} I2cInterface;
+
+I2cInterface open_i2c(){
+    I2cInterface pi_handle;
+    printf("(start $ sudo pigpiod before)\n");
+    pi_handle.pi = pigpio_start(NULL, NULL);
+    pi_handle.handle = i2c_open(pi_handle.pi, 1, MPU6050_DEFAULT_ADDRESS, 0);
+    return pi_handle;
+}
+
+int close_i2c(I2cInterface* i2c){
+  i2c_close(i2c->pi, i2c->handle);
+  pigpio_stop(i2c->pi);
+  return 0;
+}
+
+void write_single_bit(I2cInterface* i2c, unsigned int reg_addr,
                       int idx, int bit_value) {
-  unsigned int prev = i2c_read_byte_data(pi, handle, reg_addr);
+  unsigned int prev = i2c_read_byte_data(i2c->pi, i2c->handle, reg_addr);
   unsigned int new_value = chg_bit(prev, idx, bit_value);
-  i2c_write_byte_data(pi, handle, reg_addr, new_value);
+  i2c_write_byte_data(i2c->pi, i2c->handle, reg_addr, new_value);
 }
 
 void write_bits(int pi, unsigned int handle, unsigned int reg_addr, int idx,
@@ -82,7 +101,7 @@ int read_bits(int pi, unsigned int handle, unsigned int reg_addr, int idx,
   return prev & mask;
 }
 
-int read_byte(int pi, unsigned int handle, unsigned int reg_addr) {
-  unsigned int prev = i2c_read_byte_data(pi, handle, reg_addr);
-  return prev;
+/* Read i2c register. */
+unsigned int read_byte(I2cInterface* i2c, unsigned int reg_addr) {
+  return (unsigned int) i2c_read_byte_data(i2c->pi, i2c->handle, reg_addr);
 }

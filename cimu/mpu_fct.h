@@ -1,18 +1,25 @@
 #ifndef _MPU_FCT_H_
 #define _MPU_FCT_H_
 
-void write_single_bit(int pi, unsigned int handle, unsigned int reg_addr,
-                      int idx, int bit_value);
+typedef struct {
+    int pi;
+    unsigned int handle;
+} I2cInterface;
 
-void write_bits(int pi, unsigned int handle, unsigned int reg_addr, int idx,
-                int length, int value);
+I2cInterface open_i2c();
+int close_i2c(I2cInterface* i2c);
 
-int read_single_bit(int pi, unsigned int handle, unsigned int reg_addr,
-                    int idx);
+// void write_single_bit(int pi, unsigned int handle, unsigned int reg_addr,
+//                       int idx, int bit_value);
 
-int read_bits(int pi, unsigned int handle, unsigned int reg_addr, int idx,
-              int length);
+// void write_bits(int pi, unsigned int handle, unsigned int reg_addr, int idx,
+//                 int length, int value);
 
-int read_byte(int pi, unsigned int handle, unsigned int reg_addr);
+// int read_single_bit(int pi, unsigned int handle, unsigned int reg_addr,
+//                     int idx);
 
+// int read_bits(int pi, unsigned int handle, unsigned int reg_addr, int idx,
+//               int length);
+
+unsigned int read_byte(I2cInterface* i2c, unsigned int reg_addr);
 #endif
