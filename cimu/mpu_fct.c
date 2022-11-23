@@ -176,7 +176,8 @@ void turn_off_imu(I2cInterface *i2c) {
 
 /* Device RESET */
 void device_reset(I2cInterface *i2c) {
-  write_single_bit(i2c, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_DEVICE_RESET_BIT, 1);
+  write_single_bit(i2c, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_DEVICE_RESET_BIT,
+                   1);
 }
 
 /* Read all data registers Acc, Temp and Gyro. */
@@ -230,7 +231,6 @@ void set_XGyro_FIFO_enabled(I2cInterface *i2c, int enabled) {
   write_single_bit(i2c, MPU6050_RA_FIFO_EN, MPU6050_XG_FIFO_EN_BIT, enabled);
 }
 
-
 /* Get current FIFO buffer size. */
 uint16_t get_fifo_count(I2cInterface *i2c) {
   uint8_t buf[2];
@@ -247,7 +247,6 @@ uint16_t get_fifo_count(I2cInterface *i2c) {
 uint8_t get_fifo_byte(I2cInterface *i2c) {
   return read_byte(i2c, MPU6050_RA_FIFO_R_W);
 }
-
 
 int16_t read_fifo_burst(I2cInterface *i2c) {
   uint8_t buf[2];

@@ -19,50 +19,55 @@ int main() {
 
   sleep(1); // warmup
 
-  double sensitivity = 131.0; // LSB/deg/s
+  const double sensitivity = 131.0; // LSB/deg/s
+  const double dt = 0.001;          // s
+  // freq = 1kHz
 
-
-  struct timespec start, end;
+  struct timespec tic, toc;
   int delta_us;
 
-
   set_fifo_enabled(&i2c, 0);
- 
+
   // set_XGyro_FIFO_enabled(&i2c, 1);
   set_ZGyro_FIFO_enabled(&i2c, 1);
-  reset_fifo(&i2c);   
+  reset_fifo(&i2c);
   set_fifo_enabled(&i2c, 1);
 
-
-
-
-  
-  int NBR_TO_READ = 16;
+  int NBR_TO_READ = 128;
   int fifo_length;
-  double raw;
+  double raw[NBR_TO_READ];
   double data;
   double offset = 0.0;
-  double ratio = 0.95;
-
+  double ratio = 0.995;
+  double angle = 0;
+  timespec_get(&toc, TIME_UTC);
   for (int k = 0; k < 15000; k++) {
 
     fifo_length = get_fifo_count(&i2c);
-    
-    if (fifo_length > 2*NBR_TO_READ) {
-      printf("read fifo - length: %d \n", fifo_length);
-      timespec_get(&start, TIME_UTC);
+
+    if (fifo_length > 2 * NBR_TO_READ) {
+
+      // Read FIFO
+
       for (int i = 0; i < NBR_TO_READ; i++) {
-        raw = (double) read_fifo_burst(&i2c) / sensitivity;
-        if (k < 1000) {
-            offset = ratio*offset + (1-ratio)*raw;
-        }
-        data = raw - offset;
-        printf(" data: %f \t  offset: %f \n", data, offset);
+        raw[i] = (double)read_fifo_burst(&i2c) / sensitivity;
       }
-      timespec_get(&end, TIME_UTC);
-      delta_us = (end.tv_sec - start.tv_sec) * 1000000 +
-                 (end.tv_nsec - start.tv_nsec) / 1000;
-      printf("read time: %d us\n", delta_us);
+      timespec_get(&tic, TIME_UTC);
+      delta_us = (tic.tv_sec - toc.tv_sec) * 1000000 +
+                 (tic.tv_nsec - toc.tv_nsec) / 1000;
+      toc.tv_sec = tic.tv_sec;
+      toc.tv_nsec = tic.tv_nsec;
+      printf("loop freq: %f kHz \n",
+             2000.0 * (double)NBR_TO_READ / (double)delta_us);
+
+      for (int i = 0; i < NBR_TO_READ; i++) {
+        if (k < 1000) {
+          offset = ratio * offset + (1 - ratio) * raw[i];
+        } else {
+          angle = angle + (raw[i] - offset) * dt; // deg
+        }
+      }
+      printf("offset: %f  angle: %f\n", offset, angle);
     }
   }
 
