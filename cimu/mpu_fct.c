@@ -174,6 +174,11 @@ void turn_off_imu(I2cInterface *i2c) {
   write_single_bit(i2c, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT, 1);
 }
 
+/* Device RESET */
+void device_reset(I2cInterface *i2c) {
+  write_single_bit(i2c, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_DEVICE_RESET_BIT, 1);
+}
+
 /* Read all data registers Acc, Temp and Gyro. */
 void read_all_data(I2cInterface *i2c, signed short int data[7]) {
 
@@ -220,6 +225,12 @@ void set_ZGyro_FIFO_enabled(I2cInterface *i2c, int enabled) {
   write_single_bit(i2c, MPU6050_RA_FIFO_EN, MPU6050_ZG_FIFO_EN_BIT, enabled);
 }
 
+/** Set gyroscope X-axis FIFO enabled value. */
+void set_XGyro_FIFO_enabled(I2cInterface *i2c, int enabled) {
+  write_single_bit(i2c, MPU6050_RA_FIFO_EN, MPU6050_XG_FIFO_EN_BIT, enabled);
+}
+
+
 /* Get current FIFO buffer size. */
 uint16_t get_fifo_count(I2cInterface *i2c) {
   uint8_t buf[2];
@@ -235,4 +246,16 @@ uint16_t get_fifo_count(I2cInterface *i2c) {
 /* Get byte from FIFO buffer. */
 uint8_t get_fifo_byte(I2cInterface *i2c) {
   return read_byte(i2c, MPU6050_RA_FIFO_R_W);
+}
+
+
+int16_t read_fifo_burst(I2cInterface *i2c) {
+  uint8_t buf[2];
+  int nbr_read = i2c_read_i2c_block_data(i2c->pi, i2c->handle,
+                                         MPU6050_RA_FIFO_R_W, buf, 2);
+  if (nbr_read != 2) {
+    printf("Error when reading data... %d \n", nbr_read);
+    printf("%c \n", pigpio_error(nbr_read));
+  }
+  return (((int16_t)buf[0]) << 8) | (int16_t)buf[1];
 }
