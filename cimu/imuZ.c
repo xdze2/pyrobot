@@ -33,41 +33,58 @@ int main() {
   reset_fifo(&i2c);
   set_fifo_enabled(&i2c, 1);
 
-  int NBR_TO_READ = 128;
+  const int NBR_TO_READ = 128;
+  const int burst_size = 32;
   int fifo_length;
   double raw[NBR_TO_READ];
   double data;
+  int16_t raw_value;
   double offset = 0.0;
   double ratio = 0.995;
   double angle = 0;
+  uint8_t fifo_buffer[burst_size];
+  int nbr_miss = 0;
   timespec_get(&toc, TIME_UTC);
-  for (int k = 0; k < 15000; k++) {
+  for (int k = 0; k < 150; k++) {
 
     fifo_length = get_fifo_count(&i2c);
 
-    if (fifo_length > 2 * NBR_TO_READ) {
+    if (fifo_length > burst_size) {
 
       // Read FIFO
-
-      for (int i = 0; i < NBR_TO_READ; i++) {
-        raw[i] = (double)read_fifo_burst(&i2c) / sensitivity;
-      }
+      timespec_get(&toc, TIME_UTC);
+      read_fifo_burst(&i2c, fifo_buffer);
       timespec_get(&tic, TIME_UTC);
+      printf(" \n");
+      for (int i = 0; i < burst_size/2; i++) {
+        raw_value = (((int16_t)fifo_buffer[2*i]) << 8) | (int16_t)fifo_buffer[2*i+1];
+        printf("buf %d: %d \n", i, raw_value);
+      }
+      // timespec_get(&tic, TIME_UTC);
       delta_us = (tic.tv_sec - toc.tv_sec) * 1000000 +
                  (tic.tv_nsec - toc.tv_nsec) / 1000;
-      toc.tv_sec = tic.tv_sec;
-      toc.tv_nsec = tic.tv_nsec;
-      printf("loop freq: %f kHz \n",
-             2000.0 * (double)NBR_TO_READ / (double)delta_us);
+      printf("dt: %d micro sec\n", delta_us);
+      printf("missed: %d \n", nbr_miss);
+      nbr_miss = 0;
+      // toc.tv_sec = tic.tv_sec;
+      // toc.tv_nsec = tic.tv_nsec;
+      // printf("loop freq: %f kHz \n",
+      //        2000.0 * (double)NBR_TO_READ / (double)delta_us);
 
-      for (int i = 0; i < NBR_TO_READ; i++) {
-        if (k < 1000) {
-          offset = ratio * offset + (1 - ratio) * raw[i];
-        } else {
-          angle = angle + (raw[i] - offset) * dt; // deg
-        }
-      }
-      printf("offset: %f  angle: %f\n", offset, angle);
+      // for (int i = 0; i < NBR_TO_READ; i++) {
+      //   if (k < 1000) {
+      //     offset = ratio * offset + (1 - ratio) * raw[i];
+      //   } else {
+      //     angle = angle + (raw[i] - offset) * dt; // deg
+      //   }
+      // }
+      // //  return (((int16_t)buf[0]) << 8) | (int16_t)buf[1];
+      // printf("offset: %f  angle: %f\n", offset, angle);
+
+      msleep(14);
+    } else {
+        nbr_miss += 1; 
+        msleep(1);
     }
   }
 

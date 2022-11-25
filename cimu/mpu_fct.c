@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+#include <time.h>
+#include <errno.h> 
 
 #include "MPU6050reg.h"
 
@@ -248,13 +250,40 @@ uint8_t get_fifo_byte(I2cInterface *i2c) {
   return read_byte(i2c, MPU6050_RA_FIFO_R_W);
 }
 
-int16_t read_fifo_burst(I2cInterface *i2c) {
-  uint8_t buf[2];
+/* Get N bytes from FIFO buffer (burst read). */
+void read_fifo_burst(I2cInterface *i2c, uint8_t buf[32]) {
+  
   int nbr_read = i2c_read_i2c_block_data(i2c->pi, i2c->handle,
-                                         MPU6050_RA_FIFO_R_W, buf, 2);
-  if (nbr_read != 2) {
+                                         MPU6050_RA_FIFO_R_W, buf, 32);
+  if (nbr_read != 32) {
     printf("Error when reading data... %d \n", nbr_read);
     printf("%c \n", pigpio_error(nbr_read));
   }
-  return (((int16_t)buf[0]) << 8) | (int16_t)buf[1];
+}
+
+
+
+
+
+/* msleep(): Sleep for the requested number of milliseconds. */
+int msleep(long msec)
+{
+    // https://stackoverflow.com/a/1157217/8069403
+    struct timespec ts;
+    int res;
+
+    if (msec < 0)
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
+    ts.tv_sec = msec / 1000;
+    ts.tv_nsec = (msec % 1000) * 1000000;
+
+    do {
+        res = nanosleep(&ts, &ts);
+    } while (res && errno == EINTR);
+
+    return res;
 }

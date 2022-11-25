@@ -34,6 +34,8 @@ void set_XGyro_FIFO_enabled(I2cInterface *i2c, int enabled);
 void set_ZGyro_FIFO_enabled(I2cInterface *i2c, int enabled);
 uint16_t get_fifo_count(I2cInterface *i2c);
 uint8_t get_fifo_byte(I2cInterface *i2c);
-int16_t read_fifo_burst(I2cInterface *i2c);
+void read_fifo_burst(I2cInterface *i2c, uint8_t buf[32]);
+
+int msleep(long msec);
 
 #endif
