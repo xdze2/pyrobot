@@ -1,11 +1,10 @@
 
+#include <errno.h>
 #include <pigpiod_if2.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
-#include <time.h>
-#include <errno.h> 
 
 #include "MPU6050reg.h"
 
@@ -174,12 +173,14 @@ int configure_imu(I2cInterface *i2c) {
 /* Set sleep bit to 1 */
 void turn_off_imu(I2cInterface *i2c) {
   write_single_bit(i2c, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_SLEEP_BIT, 1);
+  puts("Turn off imu.");
 }
 
 /* Device RESET */
 void device_reset(I2cInterface *i2c) {
   write_single_bit(i2c, MPU6050_RA_PWR_MGMT_1, MPU6050_PWR1_DEVICE_RESET_BIT,
                    1);
+  printf("# device reset...");
 }
 
 /* Read all data registers Acc, Temp and Gyro. */
@@ -252,7 +253,7 @@ uint8_t get_fifo_byte(I2cInterface *i2c) {
 
 /* Get N bytes from FIFO buffer (burst read). */
 void read_fifo_burst(I2cInterface *i2c, uint8_t buf[32]) {
-  
+
   int nbr_read = i2c_read_i2c_block_data(i2c->pi, i2c->handle,
                                          MPU6050_RA_FIFO_R_W, buf, 32);
   if (nbr_read != 32) {
@@ -261,29 +262,23 @@ void read_fifo_burst(I2cInterface *i2c, uint8_t buf[32]) {
   }
 }
 
-
-
-
-
 /* msleep(): Sleep for the requested number of milliseconds. */
-int msleep(long msec)
-{
-    // https://stackoverflow.com/a/1157217/8069403
-    struct timespec ts;
-    int res;
+int msleep(long msec) {
+  // https://stackoverflow.com/a/1157217/8069403
+  struct timespec ts;
+  int res;
 
-    if (msec < 0)
-    {
-        errno = EINVAL;
-        return -1;
-    }
+  if (msec < 0) {
+    errno = EINVAL;
+    return -1;
+  }
 
-    ts.tv_sec = msec / 1000;
-    ts.tv_nsec = (msec % 1000) * 1000000;
+  ts.tv_sec = msec / 1000;
+  ts.tv_nsec = (msec % 1000) * 1000000;
 
-    do {
-        res = nanosleep(&ts, &ts);
-    } while (res && errno == EINTR);
+  do {
+    res = nanosleep(&ts, &ts);
+  } while (res && errno == EINTR);
 
-    return res;
+  return res;
 }

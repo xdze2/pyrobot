@@ -1,4 +1,5 @@
 #include <pigpiod_if2.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -7,106 +8,96 @@
 #include "MPU6050reg.h"
 #include "mpu_fct.h"
 
+#define BURST_SIZE 32
+
+const double SENSITIVITY = 131.0;            // LSB / deg/s
+const double dt = 0.001;                     // s, freq = 1kHz
+const double d_theta_bit = dt / SENSITIVITY; // deg/tick
+
+static volatile sig_atomic_t keep_running = 1;
+
+static void sig_handler(int _) {
+  // https://stackoverflow.com/a/54267342/8069403
+  (void)_;
+  keep_running = 0;
+}
+
+double sum_buffer(uint8_t fifo_buffer[]) {
+  double avg_wZ = 0;
+  for (int i = 0; i < BURST_SIZE / 2; i++) {
+    int16_t raw_value =
+        (((int16_t)fifo_buffer[2 * i]) << 8) | (int16_t)fifo_buffer[2 * i + 1];
+    avg_wZ += (double)raw_value; // * SENSITIVITY;
+  }
+  return avg_wZ;
+}
+
 int main() {
+  signal(SIGINT, sig_handler);
 
   I2cInterface i2c = open_i2c();
 
-  // printf("open i2c bus at %x \n", MPU6050_DEFAULT_ADDRESS);
   device_reset(&i2c);
-  printf("# device reset...");
-  sleep(1);
+  msleep(300);
   int res = configure_imu(&i2c);
-
-  sleep(1); // warmup
-
-  const double sensitivity = 131.0; // LSB/deg/s
-  const double dt = 0.001;          // s
-  // freq = 1kHz
+  msleep(1000); // warmup
 
   struct timespec tic, toc;
   int delta_us;
 
   set_fifo_enabled(&i2c, 0);
-
-  // set_XGyro_FIFO_enabled(&i2c, 1);
   set_ZGyro_FIFO_enabled(&i2c, 1);
   reset_fifo(&i2c);
   set_fifo_enabled(&i2c, 1);
 
-  const int NBR_TO_READ = 128;
-  const int burst_size = 32;
+  uint8_t fifo_buffer[BURST_SIZE];
   int fifo_length;
-  double raw[NBR_TO_READ];
-  double data;
-  int16_t raw_value;
-  double offset = 0.0;
-  double ratio = 0.995;
+  double wZ = 0;
+  double offset = 0.0; // deg/s
+  double avg_ratio = 0.95;
   double angle = 0;
-  uint8_t fifo_buffer[burst_size];
+  double previous_delta = 0;
   int nbr_miss = 0;
+  int k = 0;
   timespec_get(&toc, TIME_UTC);
-  for (int k = 0; k < 150; k++) {
+  while (keep_running) {
 
     fifo_length = get_fifo_count(&i2c);
 
-    if (fifo_length > burst_size) {
-
+    if (fifo_length >= BURST_SIZE) {
       // Read FIFO
-      timespec_get(&toc, TIME_UTC);
-      read_fifo_burst(&i2c, fifo_buffer);
-      timespec_get(&tic, TIME_UTC);
-      printf(" \n");
-      for (int i = 0; i < burst_size/2; i++) {
-        raw_value = (((int16_t)fifo_buffer[2*i]) << 8) | (int16_t)fifo_buffer[2*i+1];
-        printf("buf %d: %d \n", i, raw_value);
-      }
-      // timespec_get(&tic, TIME_UTC);
-      delta_us = (tic.tv_sec - toc.tv_sec) * 1000000 +
-                 (tic.tv_nsec - toc.tv_nsec) / 1000;
-      printf("dt: %d micro sec\n", delta_us);
-      printf("missed: %d \n", nbr_miss);
+      k++;
       nbr_miss = 0;
-      // toc.tv_sec = tic.tv_sec;
-      // toc.tv_nsec = tic.tv_nsec;
-      // printf("loop freq: %f kHz \n",
-      //        2000.0 * (double)NBR_TO_READ / (double)delta_us);
+      timespec_get(&toc, TIME_UTC);
 
-      // for (int i = 0; i < NBR_TO_READ; i++) {
-      //   if (k < 1000) {
-      //     offset = ratio * offset + (1 - ratio) * raw[i];
-      //   } else {
-      //     angle = angle + (raw[i] - offset) * dt; // deg
-      //   }
-      // }
-      // //  return (((int16_t)buf[0]) << 8) | (int16_t)buf[1];
-      // printf("offset: %f  angle: %f\n", offset, angle);
+      read_fifo_burst(&i2c, fifo_buffer);
+      wZ = sum_buffer(fifo_buffer);
 
-      msleep(14);
+      if (k < 1000) {
+        offset = avg_ratio * offset + (1 - avg_ratio) * wZ;
+        if (k % 20 == 0)
+          printf("offset: %f \n", offset * d_theta_bit);
+      } else {
+        double delta = wZ - offset;
+        angle = angle + (delta + previous_delta)/2.0;
+        previous_delta = delta;
+        if (k % 64 == 0)
+          printf("angle: %f (%f)\n", angle * d_theta_bit, delta * d_theta_bit);
+      }
+
+      // printf("fifo length %d \n", fifo_length);
+      msleep(6);
     } else {
-        nbr_miss += 1; 
-        msleep(1);
+      // int t_to_wait = BURST_SIZE - fifo_length;
+      // printf("wait %d \n", t_to_wait);
+      // nbr_miss += 1;
+      msleep(1);
     }
   }
 
-  // 50ms / 64 bytes...
-  // after set t 400kHz -> 25292 us /64
-
-  // printf("# start...\n");
-  // for (int k = 0; k < 2000; k++) {
-
-  //   // int16_t data[7];
-  //   // read_all_data(&i2c, data);
-  //   // for (int i = 0; i < 7; i++) {
-  //   //   printf("\t%d", data[i]);
-  //   // }
-  //   // printf("\n");
-
-  //   int16_t wZ_raw = read_wZ(&i2c);
-  //   double wZ = (double)wZ_raw / sensitivity;
-  //   printf("\t%f \n", wZ);
-  //   sleep(1);
-  // }
-
   turn_off_imu(&i2c);
   close_i2c(&i2c);
+
+  puts("Stopped by signal `SIGINT'");
+  return EXIT_SUCCESS;
 }
