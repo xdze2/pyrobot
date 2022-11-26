@@ -1,11 +1,14 @@
-from pyrobot.odometry import listen_imu, listen_the_mice, ImuAngle, MiceMvt
-
-
-from threading import Thread, Event
 from queue import Queue
+from threading import Event, Thread
+from typing import Union
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+from pyrobot.odometry import ImuAngle, MiceMvt, listen_imu, listen_the_mice
+
 
 msg_queue = Queue()
-
 
 def msg_callback(msg):
     msg_queue.put(msg)
@@ -22,11 +25,36 @@ imu_thread.start()
 print("Start mice thread...")
 mice_thread.start()
 
+
+
+
+class RobotPosition:
+    def __init__(self) -> None:
+        self.x = 0
+        self.y = 0
+        self.current_angle_rad = 0
+        self.log = list()
+
+    def update(self, msg: Union[ImuAngle, MiceMvt]):
+        if isinstance(msg, ImuAngle):
+            self.current_angle_rad = msg.angle * np.pi / 180
+        elif isinstance(msg, MiceMvt):
+            dx = np.cos(self.current_angle_rad) * msg.dx
+            dy = np.sin(self.current_angle_rad) * msg.dy
+            self.x += dx
+            self.y += dy
+            print("pos:", self.x, self.y)
+            self.log.append((self.x, self.y))
+        else:
+            print(f"what? {msg}")
+
+
+robot_position = RobotPosition()
 while True:
 
     try:
-        msq = msg_queue.get()
-        print(msq)
+        msg = msg_queue.get()
+        robot_position.update(msg)
 
     except KeyboardInterrupt:
         print("exit, clear event (move the robot to exit...)")
@@ -35,4 +63,15 @@ while True:
         print("mice thread is joined")
         imu_thread.join()
         print("imu thread is joined")
-        exit()
+        break
+
+
+plt.figure()
+log = np.array(robot_position.log)
+plt.plot(log[:, 0], log[:, 1])
+plt.xlabel("x")
+plt.ylabel("y")
+plt.tight_layout()
+graph_path = f"output/trajectory.png"
+plt.savefig(graph_path)
+print(f"Trajectory graph saved to {graph_path}")
