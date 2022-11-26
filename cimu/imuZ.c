@@ -18,7 +18,8 @@ static volatile sig_atomic_t keep_running = 1;
 
 static void sig_handler(int _) {
   // https://stackoverflow.com/a/54267342/8069403
-  (void)_;
+  //(void)_;
+  fprintf(stderr, "get signal %d", _);
   keep_running = 0;
 }
 
@@ -34,6 +35,9 @@ double sum_buffer(uint8_t fifo_buffer[]) {
 
 int main() {
   signal(SIGINT, sig_handler);
+  signal(SIGPIPE, sig_handler);
+
+  setvbuf(stdout, NULL, _IOLBF, 64);
 
   I2cInterface i2c = open_i2c();
 
@@ -42,7 +46,7 @@ int main() {
   int res = configure_imu(&i2c);
   msleep(1000); // warmup
 
-  struct timespec tic, toc;
+ 
   int delta_us;
 
   set_fifo_enabled(&i2c, 0);
@@ -59,7 +63,8 @@ int main() {
   double previous_delta = 0;
   int nbr_miss = 0;
   int k = 0;
-  timespec_get(&toc, TIME_UTC);
+  struct timespec start_time, tic;
+  timespec_get(&start_time, TIME_UTC);
   while (keep_running) {
 
     fifo_length = get_fifo_count(&i2c);
@@ -68,7 +73,7 @@ int main() {
       // Read FIFO
       k++;
       nbr_miss = 0;
-      timespec_get(&toc, TIME_UTC);
+      
 
       read_fifo_burst(&i2c, fifo_buffer);
       wZ = sum_buffer(fifo_buffer);
@@ -81,8 +86,13 @@ int main() {
         double delta = wZ - offset;
         angle = angle + (delta + previous_delta)/2.0;
         previous_delta = delta;
-        if (k % 64 == 0)
-          printf("angle: %f (%f)\n", angle * d_theta_bit, delta * d_theta_bit);
+        if (k % 64 == 0){
+          timespec_get(&tic, TIME_UTC);
+          delta_us = (tic.tv_sec - start_time.tv_sec) * 1000000 +
+                     (tic.tv_nsec - start_time.tv_nsec) / 1000;
+          printf("time: %d \t angle: %f (%f)\n", delta_us, angle * d_theta_bit, delta * d_theta_bit);
+          // fflush (stdout);
+        }
       }
 
       // printf("fifo length %d \n", fifo_length);
